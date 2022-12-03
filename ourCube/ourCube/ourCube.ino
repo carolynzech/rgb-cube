@@ -159,4 +159,5 @@ void lightCube(Weather weather) {
 
 void loop() {
   lightCube(weather_desc);
+  // pet watchdog
 }
