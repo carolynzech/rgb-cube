@@ -1,4 +1,3 @@
-#include "cubeplex.h"
 
 enum Weather {
   UNSUPPORTED,
@@ -8,22 +7,25 @@ enum Weather {
   CLOUDY
 };
 
+volatile int poll_time;
+volatile int prev_poll_time;
+
 Weather weather_desc = UNSUPPORTED;
 
-int[] sun_list = [0, 1, 2];
-int[] cloud_list = [3, 45, 48];
-int[] rain_list = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82];
-int[] tstorm_list = [95, 96, 99];
+int sun_list[] = {0, 1, 2, -1};
+int cloud_list[] = {3, 45, 48, -1};
+int rain_list[] = {51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, -1};
+int tstorm_list[] = {95, 96, 99, -1};
 
 void setup() {
   Serial.begin(9600);
   while (!Serial);
   Serial.println("Initialized Serial!");
+  
 
-
-  initCube();
-  Serial.println("Initialized Cube!");
-
+  setup_wifi();
+  // Initialized Wifi!
+  
 
   // Configure and enable GCLK4 for TC:
   GCLK->GENDIV.reg = GCLK_GENDIV_DIV(0) | GCLK_GENDIV_ID(4); // do not divide gclk 4
@@ -39,9 +41,9 @@ void setup() {
 
   // Disable TC (for now)
   // use TC3->COUNT16.CTRLA.reg and TC3->COUNT16.INTENCLR.reg
-  TC3->COUNT16.INTENCLR.bit.MC0 = 1;
-  TC3->COUNT16.CTRLA.bit.ENABLE = 0;
-  while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
+//  TC3->COUNT16.INTENCLR.bit.MC0 = 1;
+//  TC3->COUNT16.CTRLA.bit.ENABLE = 0;
+//  while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
 
   // Set up NVIC:
   NVIC_SetPriority(TC3_IRQn, 0);
@@ -51,9 +53,10 @@ void setup() {
 
 
   // Clear and enable WDT
+  // Ear;y-warning interrupt
   NVIC_DisableIRQ(WDT_IRQn);
   NVIC_ClearPendingIRQ(WDT_IRQn);
-  NVIC_SetPriority(WDT_IRQn, 0);
+  NVIC_SetPriority(WDT_IRQn, 0); //top priority
   NVIC_EnableIRQ(WDT_IRQn);
 
   // Configure and enable WDT GCLK:
@@ -65,23 +68,42 @@ void setup() {
 
   // Configure and enable WDT:
   WDT->CONFIG.reg = 0x9;
+
+  // Enable early warning interrupts on WDT:
   WDT->EWCTRL.reg = 0x8;
   WDT->CTRL.reg = WDT_CTRL_ENABLE;
   while (WDT->STATUS.bit.SYNCBUSY);
-
-  // Enable early warning interrupts on WDT:
   WDT->INTENSET.reg = WDT_INTENSET_EW;
+  Serial.println("Initialized Watchdog Timer!");
 
-  // reference WDT registers with WDT->register_name.reg
-  Serial.println("Initialized Watchdog!");
+  
+  // Enable the timer/counter
+  // Turn off interrupts to TC3 on MC0 when configuring
+  TC3->COUNT16.INTENCLR.bit.MC0 = 1;
+  while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
 
-  lastISR = millis();
+  // configure TC
+  TC3->COUNT16.CTRLA.bit.MODE = 0x0;
+  TC3->COUNT16.CTRLA.bit.PRESCALER = 0x1f;
+  TC3->COUNT16.CTRLA.bit.PRESCSYNC = 0x1;
+  TC3->COUNT16.CTRLA.bit.WAVEGEN = 0x1;
+  TC3->COUNT16.CTRLA.bit.ENABLE = 1;
+  TC3->COUNT16.CC[0].reg = 6000000;
+  
+  // Turn interrupts to TC3 on MC0 back on when done configuring
+  TC3->COUNT16.INTENSET.bit.MC0 = 1;
+  while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
+  
+  poll_time = millis();
+  prev_poll_time = millis();
+  poll_data();
+  
   Serial.println("Done initializing!");
 }
 
 /*
  * Determines if a speficic int token is found in a
- * list of int.
+ * list of int. Assumes the list is terminated with -1.
  *
  * token - the int that we are searching for
  * list - the array of ints that we are looking
@@ -89,11 +111,11 @@ void setup() {
  *
  * returns an int: 1 if the int was found and 0 if it was not
  */
-int is_in(int token, int *list[]) {
+int is_in(int token, int list[]) {
     int counter = 0;
-    while (list[counter]) {
-        if (list[counter] == token) return 1;
-        counter++;
+    while (list[counter] != -1) {
+      if (list[counter] == token) return 1;
+      counter++;
     }
     return 0;
 }
@@ -107,13 +129,13 @@ int is_in(int token, int *list[]) {
  * returns nothing. updates the global weather_desc.
  */
 void update_fsm(int weather_type) {
-  if is_in(weather_type, sun_list) {
+  if (is_in(weather_type, sun_list)) {
     weather_desc = SUNNY;
-  } else if is_in(weather_type, cloud_list) {
+  } else if (is_in(weather_type, cloud_list)) {
     weather_desc = CLOUDY;
-  } else if is_in(weather_type, rain_list) {
+  } else if (is_in(weather_type, rain_list)) {
     weather_desc = RAINY;
-  } else if is_in(weather_type, tstorm_list) {
+  } else if (is_in(weather_type, tstorm_list)) {
     weather_desc = THUNDERSTORM;
   } else {
     weather_desc = UNSUPPORTED;
@@ -131,26 +153,26 @@ void poll_data() {
   // call API
   int response = -1;
   while (response = read_webpage() < 0);
-
+  poll_time = millis();
   update_fsm(response);
 }
 
-bool errorOccured = false;
-int lastISR;
 
-void TC1_Handler() {
+volatile int intcount = 0;
+void TC3_Handler() {
   // Clear interrupt register flag
   // (use register TC3->COUNT16.register_name.reg)
   TC3->COUNT16.INTFLAG.bit.MC0 = 1;
   
-  secs++; //Counter increases by 1 every second   
+  intcount++; // counter increases every approx. 4.6 seconds
 
-  errorOccured = true;
-  lastISR = millis();
-
-  if (secs >= 30) { // every 30 seconds
+  if (intcount >= 6) { // every 30 seconds
     poll_data();
-    secs = 0;
+    Serial.print("Data polled! Last poll was ");
+    Serial.print((poll_time - prev_poll_time) / 100);
+    Serial.println(" seconds ago.");
+    prev_poll_time = poll_time;
+    intcount = 0;
   }
 }
 
@@ -189,19 +211,17 @@ void light_cube(Weather weather) {
   }
 }
 
-void print() {
-  if (errorOccured) {
-    int time = millis();
-    Serial.print("ISR happened millis ago: ")
-    Serial.println(time - lastISR);
-    errorOccured = false;
-  }
-}
-
+int i=0;
 void loop() {
   light_cube(weather_desc);
-  print();
-
+  if(i>500){
+    i=0;
+    Serial.print("Current weather: ");
+    Serial.println(weather_desc);
+  }
+  i++;
+  check_connection();
+  
   // pet watchdog
   WDT->CLEAR.reg = 0xa5;
 }
