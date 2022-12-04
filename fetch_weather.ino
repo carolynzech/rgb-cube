@@ -14,7 +14,8 @@ void setup_wifi() {
   while ( status != WL_CONNECTED) {
     Serial.print("Attempting to connect to: ");
     Serial.println(ssid);
-    status = WiFi.begin(ssid); // WiFi.begin(ssid, pass) for password
+    status = WiFi.begin(ssid);
+    // status = WiFi.begin(ssid, pass)
     delay(10000);
   }
   Serial.println("Connected!");
@@ -75,18 +76,7 @@ int read_webpage() {
   return -1;
 }
    
-void setup() {
-  while (!Serial);
-  Serial.begin(9600);
-  setup_wifi();
-}
-
-void loop() {
-    int r = read_webpage();
-    if (r != -1) {
-      Serial.println(r);
-    }
-
+void check_connection() {
     // Connection ended / no more bytes to read
     if (!client.connected()) {
       delay(500);
