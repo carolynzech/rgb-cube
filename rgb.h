@@ -1,8 +1,0 @@
-
-enum Weather {
-  UNSUPPORTED,
-  RAINY,
-  SUNNY,
-  THUNDERSTORM,
-  CLOUDY
-}
