@@ -1,10 +1,19 @@
 #include "cubeplex.h"
-#include "rgb.h"
-#include "jsmn.h"
 
-int color = red;
+enum Weather {
+  UNSUPPORTED,
+  RAINY,
+  SUNNY,
+  THUNDERSTORM,
+  CLOUDY
+};
+
 Weather weather_desc = UNSUPPORTED;
-jsmn_parser parser;
+
+int[] sun_list = [0, 1, 2];
+int[] cloud_list = [3, 45, 48];
+int[] rain_list = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82];
+int[] tstorm_list = [95, 96, 99];
 
 void setup() {
   Serial.begin(9600);
@@ -14,10 +23,6 @@ void setup() {
 
   initCube();
   Serial.println("Initialized Cube!");
-
-
-  jsmn_init(&parser);
-  Serial.println("Initialized Parser!");
 
 
   // Configure and enable GCLK4 for TC:
@@ -70,44 +75,48 @@ void setup() {
   // reference WDT registers with WDT->register_name.reg
   Serial.println("Initialized Watchdog!");
 
+  lastISR = millis();
   Serial.println("Done initializing!");
 }
 
 /*
- * Parses the API response in order to get the appropriate weather_desc from the
- * short forecast. Returns the success of the parse.
+ * Determines if a speficic int token is found in a
+ * list of int.
  *
- * json - the JSON response from the API
- * returns 0 on success, -1 on error. sets the global weather_desc
+ * token - the int that we are searching for
+ * list - the array of ints that we are looking
+ *        into to find the target
+ *
+ * returns an int: 1 if the int was found and 0 if it was not
  */
-int parseWeather(const char *json) {
-  jsmntok_t tokens[256]; //TODO how many tokens are needed
-  int jsonLen = jsmn_parse(&parser, json, strlen(json), tokens, 256);
-  if (jsonLen == JSMN_ERROR_NOMEM) {
-    // TODO: remove when we know the size
-    Serial.println("we need more size");
-    return -1;
-  }
-
-  // Error check the response from the parser
-  if (jsonLen < 0) {
-    Serial.println("Error: JSON was corrupted or ended before it was expected");
-    return -1;
-  }
-
-  // The top-level element must be an object
-  if (jsonLen < 1 || t[0].type != JSMN_OBJECT) {
-    Serial.println("Error: expected JSON to have object at top-level");
-    return -1;
-  }
-
-  // Loop over all keys of the root object
-  for (int i = 1; i < jsonLen; i++) {
-    if (jsoneq(json, &tokens[i], "user") == 0) { //TODO: know the structure of the data before parsing
-      /* We may use strndup() to fetch string value */
-      printf("- User: %.*s\n", t[i + 1].end - t[i + 1].start, json + t[i + 1].start);
-      i++;
+int is_in(int token, int *list[]) {
+    int counter = 0;
+    while (list[counter]) {
+        if (list[counter] == token) return 1;
+        counter++;
     }
+    return 0;
+}
+
+/*
+ * Updates the variable Weather input to the finite state machine.
+ * Sets weather_desc based on the recieved weather_type from the API
+ * call, which becomes the input to light_cube().
+ * 
+ * weather_type - the WMO Weather interpretation code recieved from the API
+ * returns nothing. updates the global weather_desc.
+ */
+void update_fsm(int weather_type) {
+  if is_in(weather_type, sun_list) {
+    weather_desc = SUNNY;
+  } else if is_in(weather_type, cloud_list) {
+    weather_desc = CLOUDY;
+  } else if is_in(weather_type, rain_list) {
+    weather_desc = RAINY;
+  } else if is_in(weather_type, tstorm_list) {
+    weather_desc = THUNDERSTORM;
+  } else {
+    weather_desc = UNSUPPORTED;
   }
 }
 
@@ -118,16 +127,39 @@ int parseWeather(const char *json) {
  *
  * no inputs, returns nothing. updates the weather_desc global.
  */
-void pollData() {
+void poll_data() {
   // call API
-  // get JSON as string
-  char *response;
+  int response = -1;
+  while (response = read_webpage() < 0);
 
-  // parse to JSON object
-  if (parseWeather(response) < 0) {
-    Serial.println("Error: could not parse forecast from JSON recieved:");
-    Serial.println(response);
+  update_fsm(response);
+}
+
+bool errorOccured = false;
+int lastISR;
+
+void TC1_Handler() {
+  // Clear interrupt register flag
+  // (use register TC3->COUNT16.register_name.reg)
+  TC3->COUNT16.INTFLAG.bit.MC0 = 1;
+  
+  secs++; //Counter increases by 1 every second   
+
+  errorOccured = true;
+  lastISR = millis();
+
+  if (secs >= 30) { // every 30 seconds
+    poll_data();
+    secs = 0;
   }
+}
+
+void WDT_Handler() {
+  // Clear interrupt register flag
+  WDT->INTFLAG.bit.EW = 1;
+  
+  // Warn user that a watchdog reset may happen
+  Serial.println("Watchdog reset may happen!");
 }
 
 /*
@@ -137,12 +169,12 @@ void pollData() {
  * weather - the current weather
  * returns nothing; lights the cube
  */
-void lightCube(Weather weather) {
+void light_cube(Weather weather) {
   switch (weather) {
     case RAINY:
       // light blue
       break;
-    case SUNNY:
+    case SUNNY: // clear skies
       // light yellow
       break;
     case THUNDERSTORM:
@@ -157,7 +189,19 @@ void lightCube(Weather weather) {
   }
 }
 
+void print() {
+  if (errorOccured) {
+    int time = millis();
+    Serial.print("ISR happened millis ago: ")
+    Serial.println(time - lastISR);
+    errorOccured = false;
+  }
+}
+
 void loop() {
-  lightCube(weather_desc);
+  light_cube(weather_desc);
+  print();
+
   // pet watchdog
+  WDT->CLEAR.reg = 0xa5;
 }
