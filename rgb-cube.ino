@@ -74,6 +74,9 @@ void setup() {
   WDT->CTRL.reg = WDT_CTRL_ENABLE;
   while (WDT->STATUS.bit.SYNCBUSY);
   WDT->INTENSET.reg = WDT_INTENSET_EW;
+
+  WDT->CTRL.bit.ENABLE = 1; // Start watchdog now!
+  while(WDT->STATUS.bit.SYNCBUSY);
   Serial.println("Initialized Watchdog Timer!");
 
   
@@ -152,7 +155,11 @@ void update_fsm(int weather_type) {
 void poll_data() {
   // call API
   int response = -1;
-  while (response = read_webpage() < 0);
+  int try_read = millis();
+  while (response = read_webpage() < 0) {
+//    Serial.println("Failed to read...");
+    for (int i=0; i<1073741823; i++);
+  }
   poll_time = millis();
   update_fsm(response);
 }
