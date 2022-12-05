@@ -33,8 +33,8 @@ void setup() {
   while(GCLK->STATUS.bit.SYNCBUSY);
   // use GCLK->GENCTRL.reg and GCLK->CLKCTRL.reg
   GCLK->GENCTRL.reg = GCLK_GENCTRL_ID(0x04) | GCLK_GENCTRL_IDC | GCLK_GENCTRL_SRC(0x06) | GCLK_GENCTRL_GENEN;
-  GCLK->CLKCTRL.reg = GCLK_CLKCTRL_GEN(0x4) | GCLK_CLKCTRL_ID(0x1b) | GCLK_CLKCTRL_CLKEN;
   while(GCLK->STATUS.bit.SYNCBUSY);
+  GCLK->CLKCTRL.reg = GCLK_CLKCTRL_GEN(0x4) | GCLK_CLKCTRL_ID(0x1b) | GCLK_CLKCTRL_CLKEN;
 
   // Check if APB is enabled:
   Serial.println(PM->APBCMASK.reg & PM_APBCMASK_TC3, BIN);
@@ -65,7 +65,7 @@ void setup() {
   while (GCLK->STATUS.bit.SYNCBUSY);
   GCLK->GENCTRL.reg = GCLK_GENCTRL_DIVSEL | GCLK_GENCTRL_ID(0x5) | GCLK_GENCTRL_SRC(0x03) | GCLK_GENCTRL_GENEN;
   while (GCLK->STATUS.bit.SYNCBUSY);
-  GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN(0x5) | GCLK_CLKCTRL_ID(0x03) | GCLK_CLKCTRL_CLKEN;
+  GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN(0x5) | GCLK_CLKCTRL_ID(0x03);
 
   // Configure and enable WDT:
   WDT->CONFIG.reg = 0x9;
@@ -74,10 +74,7 @@ void setup() {
   WDT->EWCTRL.reg = 0x8;
   WDT->CTRL.reg = WDT_CTRL_ENABLE;
   while (WDT->STATUS.bit.SYNCBUSY);
-  WDT->INTENSET.reg = WDT_INTENSET_EW;
-
-  WDT->CTRL.bit.ENABLE = 1; // Start watchdog now!
-  while(WDT->STATUS.bit.SYNCBUSY);
+  WDT->INTENSET.bit.EW = 1;
   Serial.println("Initialized Watchdog Timer!");
 
   
@@ -181,7 +178,7 @@ void TC3_Handler() {
 
 void WDT_Handler() {
   // Clear interrupt register flag
-  WDT->INTFLAG.bit.EW = 1;
+  WDT->INTFLAG.reg = 1;
   
   // Warn user that a watchdog reset may happen
   Serial.println("Watchdog reset may happen!");
