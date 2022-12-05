@@ -57,7 +57,7 @@ int read_webpage() {
     char* time_ptr = strstr(buffer, "time\":");
     char weather_code_digit_one;
     char weather_code_digit_two;
-    int weather_code = -1;
+    int weather_code = -2;
     if (time_ptr != NULL) {
       weather_code_digit_one = *(time_ptr - 4);
       weather_code_digit_two = *(time_ptr - 3);

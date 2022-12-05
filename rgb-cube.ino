@@ -9,6 +9,7 @@ enum Weather {
 
 volatile int poll_time;
 volatile int prev_poll_time;
+volatile int intcount = 0;
 
 Weather weather_desc = UNSUPPORTED;
 
@@ -99,7 +100,8 @@ void setup() {
   
   poll_time = millis();
   prev_poll_time = millis();
-  poll_data();
+
+  while (read_webpage() < 0) poll_data();
   
   Serial.println("Done initializing!");
 }
@@ -154,33 +156,27 @@ void update_fsm(int weather_type) {
  */
 void poll_data() {
   // call API
-  int response = -1;
+  int response = read_webpage();
   int try_read = millis();
-  while (response = read_webpage() < 0) {
-//    Serial.println("Failed to read...");
-    for (int i=0; i<1073741823; i++);
+  if (response == -1) {
+    Serial.println("Failed to read...");
+  } else {
+    poll_time = millis();
+    Serial.print("Data polled! Last poll was ");
+    Serial.print((poll_time - prev_poll_time) / 100);
+    Serial.println(" seconds ago.");
+    update_fsm(response);
+    prev_poll_time = poll_time;
+    intcount = 0;
   }
-  poll_time = millis();
-  update_fsm(response);
 }
 
-
-volatile int intcount = 0;
 void TC3_Handler() {
   // Clear interrupt register flag
   // (use register TC3->COUNT16.register_name.reg)
   TC3->COUNT16.INTFLAG.bit.MC0 = 1;
   
   intcount++; // counter increases every approx. 4.6 seconds
-
-  if (intcount >= 6) { // every 30 seconds
-    poll_data();
-    Serial.print("Data polled! Last poll was ");
-    Serial.print((poll_time - prev_poll_time) / 100);
-    Serial.println(" seconds ago.");
-    prev_poll_time = poll_time;
-    intcount = 0;
-  }
 }
 
 void WDT_Handler() {
@@ -225,8 +221,12 @@ void loop() {
     i=0;
     Serial.print("Current weather: ");
     Serial.println(weather_desc);
+    if (intcount >= 6) { // spprox every 30 seconds
+      poll_data();
+    }
   }
   i++;
+  
   check_connection();
   
   // pet watchdog
