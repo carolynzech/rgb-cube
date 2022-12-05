@@ -28,8 +28,8 @@ void setup_wifi() {
 }
 
 bool connect_to_webpage() {
-  if (client.connect("api.open-meteo.com", 80)) { // (client.connect(api.weather.gov, 80))
-    client.println("GET /v1/forecast?latitude=52.52&longitude=13.41&current_weather=true HTTP/1.1"); // gridpoints/BOX/64,64/forecast?units=us
+  if (client.connect("api.open-meteo.com", 80)) {
+    client.println("GET /v1/forecast?latitude=41.82&longitude=-71.41&current_weather=true HTTP/1.1");
     client.println("Host: api.open-meteo.com");
     client.println("Connection: close");
     client.println();
@@ -40,18 +40,17 @@ bool connect_to_webpage() {
   }
 }
 
+// -1 error means client unavailable, -2 means just haven't read enough bytes to reach weather code yet
 int read_webpage() {
     // Check for bytes to read
   int len = client.available();
   if (len == 0){
-    // Serial.println("returning");
     return -1;
   }
   memset(buffer, 0x0, sizeof(buffer));
   int index = 0;
   while (client.available()) {
-    int r = client.read();
-    char c = (char) r;
+    char c = client.read();
     buffer[index] = c;
     index++;
     char* time_ptr = strstr(buffer, "time\":");
