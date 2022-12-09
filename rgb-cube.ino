@@ -1,3 +1,23 @@
+// PORT A Group
+int PIN2 = 10;
+int PIN3 = 11;
+int PIN6 = 20;
+int PIN7 = 21;
+int PIN8 = 16;
+int PIN9 = 17;
+int PIN10 = 19;
+int PIN11 = 8;
+int PIN12 = 9;
+int PINA0 = 2;
+int PINA4 = 4;
+
+// PORT B Group
+int PIN4 = 10;
+int PIN5 = 11;
+int PIN13 = 23;
+int PINA1 = 2;
+int PINA2 = 3;
+
 enum Weather {
   UNSUPPORTED,
   RAINY,
@@ -99,8 +119,12 @@ void setup() {
 
   // while (read_webpage() < 0) poll_data();
 
-  PORT->Group[PORTA].DIRSET.reg = (1 << 20); // pin 6
-  PORT->Group[PORTA].DIRSET.reg = (1 << 22); // pin 0
+  PORT->Group[PORTA].DIRSET.reg = (1 << PIN10);
+  // PORT->Group[PORTB].DIRSET.reg = (1 << PIN4);
+  PORT->Group[PORTA].DIRSET.reg = (1 << PIN11);
+  PORT->Group[PORTB].DIRSET.reg = (1 << PIN5);
+  PORT->Group[PORTA].DIRSET.reg = (1 << PIN12);
+  PORT->Group[PORTB].DIRSET.reg = (1 << PIN13);
   
   Serial.println("Done initializing!");
 }
@@ -221,8 +245,12 @@ skip the painful part of lab 3 (configuring interrupts to go in rising edges). s
 would have to change register names and hack of doing the mappings from pins to ports (datasheet -- which bit corresponds to which pin)
 */
 void loop() {
-  PORT->Group[PORTA].OUTSET.reg = (1 << 20); // turn on led at pin 6
-  PORT->Group[PORTA].OUTCLR.reg = (1 << 22); // turn on ground at pin 0
+  PORT->Group[PORTA].OUTSET.reg = (1 << PIN12);
+  PORT->Group[PORTB].OUTSET.reg = (1 << PIN13);
+  PORT->Group[PORTA].OUTSET.reg = (1 << PIN10);
+  PORT->Group[PORTA].OUTSET.reg = (1 << PIN11);
+  // PORT->Group[PORTB].OUTCLR.reg = (1 << PIN4);
+  PORT->Group[PORTB].OUTCLR.reg = (1 << PIN5);
   /* light_cube(weather_desc);
   if(i>500){
     i=0;
