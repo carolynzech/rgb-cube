@@ -13,6 +13,7 @@ volatile int intcount = 0;
 
 Weather weather_desc = UNSUPPORTED;
 
+// translate weather codes to the supported weather patterns. terminate with -1
 int sun_list[] = {0, 1, 2, -1};
 int cloud_list[] = {3, 45, 48, -1};
 int rain_list[] = {51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, -1};
@@ -36,16 +37,6 @@ void setup() {
   while(GCLK->STATUS.bit.SYNCBUSY);
   GCLK->CLKCTRL.reg = GCLK_CLKCTRL_GEN(0x4) | GCLK_CLKCTRL_ID(0x1b) | GCLK_CLKCTRL_CLKEN;
 
-  // Check if APB is enabled:
-  Serial.println(PM->APBCMASK.reg & PM_APBCMASK_TC3, BIN);
-  // use PM->APBX.reg (change X to the correct letter and mask the relevant bit)
-
-  // Disable TC (for now)
-  // use TC3->COUNT16.CTRLA.reg and TC3->COUNT16.INTENCLR.reg
-//  TC3->COUNT16.INTENCLR.bit.MC0 = 1;
-//  TC3->COUNT16.CTRLA.bit.ENABLE = 0;
-//  while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
-
   // Set up NVIC:
   NVIC_SetPriority(TC3_IRQn, 0);
   NVIC_EnableIRQ(TC3_IRQn);
@@ -54,7 +45,7 @@ void setup() {
 
 
   // Clear and enable WDT
-  // Ear;y-warning interrupt
+  // Early-warning interrupt
   NVIC_DisableIRQ(WDT_IRQn);
   NVIC_ClearPendingIRQ(WDT_IRQn);
   NVIC_SetPriority(WDT_IRQn, 0); //top priority
@@ -78,6 +69,13 @@ void setup() {
   Serial.println("Initialized Watchdog Timer!");
 
   
+  poll_time = millis();
+  prev_poll_time = millis();
+
+  while (int response = read_webpage() < 0) update_fsm(response);
+  Serial.println("Done polling initial weather value!");
+
+  
   // Enable the timer/counter
   // Turn off interrupts to TC3 on MC0 when configuring
   TC3->COUNT16.INTENCLR.bit.MC0 = 1;
@@ -94,11 +92,7 @@ void setup() {
   // Turn interrupts to TC3 on MC0 back on when done configuring
   TC3->COUNT16.INTENSET.bit.MC0 = 1;
   while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
-  
-  poll_time = millis();
-  prev_poll_time = millis();
 
-  while (read_webpage() < 0) poll_data();
   
   Serial.println("Done initializing!");
 }
@@ -156,7 +150,7 @@ void poll_data() {
   int response = read_webpage();
   int try_read = millis();
   if (response == -1) {
-    Serial.println("Failed to read...");
+    Serial.println("Failed to read weather... trying again.");
   } else {
     poll_time = millis();
     Serial.print("Data polled! Last poll was ");
@@ -164,7 +158,7 @@ void poll_data() {
     Serial.println(" seconds ago.");
     update_fsm(response);
     prev_poll_time = poll_time;
-    intcount = 0;
+    intcount = 0; // reset counter since we successfully polled
   }
 }
 
@@ -172,8 +166,15 @@ void TC3_Handler() {
   // Clear interrupt register flag
   // (use register TC3->COUNT16.register_name.reg)
   TC3->COUNT16.INTFLAG.bit.MC0 = 1;
+
+  // print the current weathter status
+  Serial.print("Current weather: ");
+  Serial.println(weather_desc);
   
   intcount++; // counter increases every approx. 4.6 seconds
+  if (intcount >= 5) { // after approx 23 seconds since last successful poll
+      poll_data();
+  }
 }
 
 void WDT_Handler() {
@@ -211,21 +212,10 @@ void light_cube(Weather weather) {
   }
 }
 
-int i=0;
 void loop() {
   light_cube(weather_desc);
-  if(i>500){
-    i=0;
-    Serial.print("Current weather: ");
-    Serial.println(weather_desc);
-    if (intcount >= 6) { // spprox every 30 seconds
-      poll_data();
-    }
-  }
-  i++;
-  
   check_connection();
-  
+
   // pet watchdog
   WDT->CLEAR.reg = 0xa5;
 }

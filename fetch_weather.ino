@@ -24,7 +24,6 @@ void setup_wifi() {
   } else {
     Serial.println("failed to fetch webpage");
   }
-  Serial.println();
 }
 
 bool connect_to_webpage() {
