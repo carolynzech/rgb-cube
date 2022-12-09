@@ -32,6 +32,7 @@ volatile int intcount = 0;
 
 Weather weather_desc = UNSUPPORTED;
 
+// translate weather codes to the supported weather patterns. terminate with -1
 int sun_list[] = {0, 1, 2, -1};
 int cloud_list[] = {3, 45, 48, -1};
 int rain_list[] = {51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, -1};
@@ -42,82 +43,8 @@ void setup() {
   while (!Serial);
   Serial.println("Initialized Serial!");
   
-
-  // setup_wifi();
+  setup_wifi();
   // Initialized Wifi!
-  
-
-//   // Configure and enable GCLK4 for TC:
-//   GCLK->GENDIV.reg = GCLK_GENDIV_DIV(0) | GCLK_GENDIV_ID(4); // do not divide gclk 4
-//   while(GCLK->STATUS.bit.SYNCBUSY);
-//   // use GCLK->GENCTRL.reg and GCLK->CLKCTRL.reg
-//   GCLK->GENCTRL.reg = GCLK_GENCTRL_ID(0x04) | GCLK_GENCTRL_IDC | GCLK_GENCTRL_SRC(0x06) | GCLK_GENCTRL_GENEN;
-//   while(GCLK->STATUS.bit.SYNCBUSY);
-//   GCLK->CLKCTRL.reg = GCLK_CLKCTRL_GEN(0x4) | GCLK_CLKCTRL_ID(0x1b) | GCLK_CLKCTRL_CLKEN;
-
-//   // Check if APB is enabled:
-//   Serial.println(PM->APBCMASK.reg & PM_APBCMASK_TC3, BIN);
-//   // use PM->APBX.reg (change X to the correct letter and mask the relevant bit)
-
-//   // Disable TC (for now)
-//   // use TC3->COUNT16.CTRLA.reg and TC3->COUNT16.INTENCLR.reg
-// //  TC3->COUNT16.INTENCLR.bit.MC0 = 1;
-// //  TC3->COUNT16.CTRLA.bit.ENABLE = 0;
-// //  while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
-
-//   // Set up NVIC:
-//   NVIC_SetPriority(TC3_IRQn, 0);
-//   NVIC_EnableIRQ(TC3_IRQn);
-
-//   Serial.println("Initialized Timer!");
-
-
-//   // Clear and enable WDT
-//   // Ear;y-warning interrupt
-//   NVIC_DisableIRQ(WDT_IRQn);
-//   NVIC_ClearPendingIRQ(WDT_IRQn);
-//   NVIC_SetPriority(WDT_IRQn, 0); //top priority
-//   NVIC_EnableIRQ(WDT_IRQn);
-
-//   // Configure and enable WDT GCLK:
-//   GCLK->GENDIV.reg = GCLK_GENDIV_DIV(4) | GCLK_GENDIV_ID(5);
-//   while (GCLK->STATUS.bit.SYNCBUSY);
-//   GCLK->GENCTRL.reg = GCLK_GENCTRL_DIVSEL | GCLK_GENCTRL_ID(0x5) | GCLK_GENCTRL_SRC(0x03) | GCLK_GENCTRL_GENEN;
-//   while (GCLK->STATUS.bit.SYNCBUSY);
-//   GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN(0x5) | GCLK_CLKCTRL_ID(0x03);
-
-//   // Configure and enable WDT:
-//   WDT->CONFIG.reg = 0x9;
-
-//   // Enable early warning interrupts on WDT:
-//   WDT->EWCTRL.reg = 0x8;
-//   WDT->CTRL.reg = WDT_CTRL_ENABLE;
-//   while (WDT->STATUS.bit.SYNCBUSY);
-//   WDT->INTENSET.bit.EW = 1;
-//   Serial.println("Initialized Watchdog Timer!");
-
-  
-//   // Enable the timer/counter
-//   // Turn off interrupts to TC3 on MC0 when configuring
-//   TC3->COUNT16.INTENCLR.bit.MC0 = 1;
-//   while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
-
-//   // configure TC
-//   TC3->COUNT16.CTRLA.bit.MODE = 0x0;
-//   TC3->COUNT16.CTRLA.bit.PRESCALER = 0x1f;
-//   TC3->COUNT16.CTRLA.bit.PRESCSYNC = 0x1;
-//   TC3->COUNT16.CTRLA.bit.WAVEGEN = 0x1;
-//   TC3->COUNT16.CTRLA.bit.ENABLE = 1;
-//   TC3->COUNT16.CC[0].reg = 6000000;
-  
-//   // Turn interrupts to TC3 on MC0 back on when done configuring
-//   TC3->COUNT16.INTENSET.bit.MC0 = 1;
-//   while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
-  
-//   poll_time = millis();
-//   prev_poll_time = millis();
-
-  // while (read_webpage() < 0) poll_data();
 
   PORT->Group[PORTA].DIRSET.reg = (1 << PIN10); // wire 9
   PORT->Group[PORTB].DIRSET.reg = (1 << PIN4); // wire 3
@@ -133,13 +60,75 @@ void setup() {
   PORT->Group[PORTA].DIRSET.reg = (1 << PIN6);
 
   // wire 13, 14, 15, 16
-    PORT->Group[PORTA].DIRSET.reg = (1 << PINA0);
-    PORT->Group[PORTA].DIRSET.reg = (1 << PINA3);
-    PORT->Group[PORTB].DIRSET.reg = (1 << PINA1);
-    PORT->Group[PORTB].DIRSET.reg = (1 << PINA2);
+  PORT->Group[PORTA].DIRSET.reg = (1 << PINA0);
+  PORT->Group[PORTA].DIRSET.reg = (1 << PINA3);
+  PORT->Group[PORTB].DIRSET.reg = (1 << PINA1);
+  PORT->Group[PORTB].DIRSET.reg = (1 << PINA2);
 
-    PORT->Group[PORTA].DIRSET.reg = (1 << PIN3); // wire 1
-    PORT->Group[PORTA].DIRSET.reg = (1 << PIN2); // wire 2
+  PORT->Group[PORTA].DIRSET.reg = (1 << PIN3); // wire 1
+  PORT->Group[PORTA].DIRSET.reg = (1 << PIN2); // wire 2
+  // Configure and enable GCLK4 for TC:
+  GCLK->GENDIV.reg = GCLK_GENDIV_DIV(0) | GCLK_GENDIV_ID(4); // do not divide gclk 4
+  while(GCLK->STATUS.bit.SYNCBUSY);
+  // use GCLK->GENCTRL.reg and GCLK->CLKCTRL.reg
+  GCLK->GENCTRL.reg = GCLK_GENCTRL_ID(0x04) | GCLK_GENCTRL_IDC | GCLK_GENCTRL_SRC(0x06) | GCLK_GENCTRL_GENEN;
+  while(GCLK->STATUS.bit.SYNCBUSY);
+  GCLK->CLKCTRL.reg = GCLK_CLKCTRL_GEN(0x4) | GCLK_CLKCTRL_ID(0x1b) | GCLK_CLKCTRL_CLKEN;
+
+  // Set up NVIC:
+  NVIC_SetPriority(TC3_IRQn, 0);
+  NVIC_EnableIRQ(TC3_IRQn);
+
+  Serial.println("Initialized Timer!");
+
+  // Clear and enable WDT
+  // Early-warning interrupt
+  NVIC_DisableIRQ(WDT_IRQn);
+  NVIC_ClearPendingIRQ(WDT_IRQn);
+  NVIC_SetPriority(WDT_IRQn, 0); //top priority
+  NVIC_EnableIRQ(WDT_IRQn);
+
+  // Configure and enable WDT GCLK:
+  GCLK->GENDIV.reg = GCLK_GENDIV_DIV(4) | GCLK_GENDIV_ID(5);
+  while (GCLK->STATUS.bit.SYNCBUSY);
+  GCLK->GENCTRL.reg = GCLK_GENCTRL_DIVSEL | GCLK_GENCTRL_ID(0x5) | GCLK_GENCTRL_SRC(0x03) | GCLK_GENCTRL_GENEN;
+  while (GCLK->STATUS.bit.SYNCBUSY);
+  GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN(0x5) | GCLK_CLKCTRL_ID(0x03);
+
+  // Configure and enable WDT:
+  WDT->CONFIG.reg = 0x9;
+
+  // Enable early warning interrupts on WDT:
+  WDT->EWCTRL.reg = 0x8;
+  WDT->CTRL.reg = WDT_CTRL_ENABLE;
+  while (WDT->STATUS.bit.SYNCBUSY);
+  WDT->INTENSET.bit.EW = 1;
+  Serial.println("Initialized Watchdog Timer!");
+
+  
+  poll_time = millis();
+  prev_poll_time = millis();
+
+  while (int response = read_webpage() < 0) update_fsm(response);
+  Serial.println("Done polling initial weather value!");
+
+  
+  // Enable the timer/counter
+  // Turn off interrupts to TC3 on MC0 when configuring
+  TC3->COUNT16.INTENCLR.bit.MC0 = 1;
+  while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
+
+  // configure TC
+  TC3->COUNT16.CTRLA.bit.MODE = 0x0;
+  TC3->COUNT16.CTRLA.bit.PRESCALER = 0x1f;
+  TC3->COUNT16.CTRLA.bit.PRESCSYNC = 0x1;
+  TC3->COUNT16.CTRLA.bit.WAVEGEN = 0x1;
+  TC3->COUNT16.CTRLA.bit.ENABLE = 1;
+  TC3->COUNT16.CC[0].reg = 6000000;
+  
+  // Turn interrupts to TC3 on MC0 back on when done configuring
+  TC3->COUNT16.INTENSET.bit.MC0 = 1;
+  while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
   
   Serial.println("Done initializing!");
 }
@@ -197,7 +186,7 @@ void poll_data() {
   int response = read_webpage();
   int try_read = millis();
   if (response == -1) {
-    Serial.println("Failed to read...");
+    Serial.println("Failed to read weather... trying again.");
   } else {
     poll_time = millis();
     Serial.print("Data polled! Last poll was ");
@@ -205,7 +194,7 @@ void poll_data() {
     Serial.println(" seconds ago.");
     update_fsm(response);
     prev_poll_time = poll_time;
-    intcount = 0;
+    intcount = 0; // reset counter since we successfully polled
   }
 }
 
@@ -213,8 +202,15 @@ void TC3_Handler() {
   // Clear interrupt register flag
   // (use register TC3->COUNT16.register_name.reg)
   TC3->COUNT16.INTFLAG.bit.MC0 = 1;
+
+  // print the current weathter status
+  Serial.print("Current weather: ");
+  Serial.println(weather_desc);
   
   intcount++; // counter increases every approx. 4.6 seconds
+  if (intcount >= 5) { // after approx 23 seconds since last successful poll
+      poll_data();
+  }
 }
 
 void WDT_Handler() {
@@ -300,13 +296,6 @@ delay(5000);
 }
 
 int i=0;
-/* 
-In a main loop, configure the direction for the pin pairs for the leds, set them to be the only output ones (first one high, second one low), if it looks good don't need an interrupt. won't have pwm rn
-look at lab 3 for how you set direction and output
-skip the painful part of lab 3 (configuring interrupts to go in rising edges). step 3 of lab 3 is where you blink an LED, write the port direction and output.
-would have to change register names and hack of doing the mappings from pins to ports (datasheet -- which bit corresponds to which pin)
-*/
-
 
 void loop() {
   PORT->Group[PORTA].OUTSET.reg = (1 << PIN9); // set to be ground
@@ -333,11 +322,6 @@ void loop() {
   PORT->Group[PORTA].DIRCLR.reg = (1 << PIN3); 
   PORT->Group[PORTA].DIRCLR.reg = (1 << PIN2); 
   PORT->Group[PORTB].DIRCLR.reg = (1 << PIN5); 
- 
-
- 
-
-
 
   /* light_cube(weather_desc);
   if(i>500){
@@ -349,9 +333,9 @@ void loop() {
     }
   }
   i++;
-  
+
   check_connection();
-  
+
   // pet watchdog
   WDT->CLEAR.reg = 0xa5; */
 }
