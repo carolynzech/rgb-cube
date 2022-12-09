@@ -127,6 +127,12 @@ void setup() {
   PORT->Group[PORTB].DIRSET.reg = (1 << PIN13);
 
 
+  // ground for bottom 3rd row
+    PORT->Group[PORTA].DIRSET.reg = (1 << PIN3);
+  // ground for bottom 4th row
+    PORT->Group[PORTA].DIRSET.reg = (1 << PIN2);
+
+
   
   
   Serial.println("Done initializing!");
@@ -235,7 +241,19 @@ void light_cube(Weather weather) {
       // light cloudy
       break;
     default:
-      // light off
+       // MAKE THE BOTTOM LAYER GREEN
+  // set green legs on for bottom layer
+  PORT->Group[PORTA].OUTSET.reg = (1 << PIN12);
+  PORT->Group[PORTB].OUTSET.reg = (1 << PIN13);
+  PORT->Group[PORTA].OUTSET.reg = (1 << PIN10);
+  PORT->Group[PORTA].OUTSET.reg = (1 << PIN11);
+
+  PORT->Group[PORTB].OUTCLR.reg = (1 << PIN4); // set to be ground 1st on bottom layer
+  PORT->Group[PORTA].OUTCLR.reg = (1 << PIN3); // set to be ground 4th on bottom layer
+  PORT->Group[PORTA].OUTCLR.reg = (1 << PIN2); // set to be ground 3rd on bottom layer
+  PORT->Group[PORTB].OUTCLR.reg = (1 << PIN5); // set to be ground 2nd on bottom layer
+
+  // CLEAR THINGS WE SET; SO WE CAN MAKE NEXT PATTERN 
       break;
   }
 }
@@ -247,13 +265,15 @@ look at lab 3 for how you set direction and output
 skip the painful part of lab 3 (configuring interrupts to go in rising edges). step 3 of lab 3 is where you blink an LED, write the port direction and output.
 would have to change register names and hack of doing the mappings from pins to ports (datasheet -- which bit corresponds to which pin)
 */
+
+int pattern_counter = 0;
 void loop() {
-  PORT->Group[PORTA].OUTSET.reg = (1 << PIN12);
-  PORT->Group[PORTB].OUTSET.reg = (1 << PIN13);
-  PORT->Group[PORTA].OUTSET.reg = (1 << PIN10);
-  PORT->Group[PORTA].OUTSET.reg = (1 << PIN11);
-  PORT->Group[PORTB].OUTCLR.reg = (1 << PIN4);
-  // PORT->Group[PORTB].OUTCLR.reg = (1 << PIN5);
+  light_cube(weather_desc);
+
+ 
+
+
+
   /* light_cube(weather_desc);
   if(i>500){
     i=0;
