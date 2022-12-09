@@ -120,11 +120,14 @@ void setup() {
   // while (read_webpage() < 0) poll_data();
 
   PORT->Group[PORTA].DIRSET.reg = (1 << PIN10);
-  // PORT->Group[PORTB].DIRSET.reg = (1 << PIN4);
+  PORT->Group[PORTB].DIRSET.reg = (1 << PIN4);
   PORT->Group[PORTA].DIRSET.reg = (1 << PIN11);
   PORT->Group[PORTB].DIRSET.reg = (1 << PIN5);
   PORT->Group[PORTA].DIRSET.reg = (1 << PIN12);
   PORT->Group[PORTB].DIRSET.reg = (1 << PIN13);
+
+
+  
   
   Serial.println("Done initializing!");
 }
@@ -249,8 +252,8 @@ void loop() {
   PORT->Group[PORTB].OUTSET.reg = (1 << PIN13);
   PORT->Group[PORTA].OUTSET.reg = (1 << PIN10);
   PORT->Group[PORTA].OUTSET.reg = (1 << PIN11);
-  // PORT->Group[PORTB].OUTCLR.reg = (1 << PIN4);
-  PORT->Group[PORTB].OUTCLR.reg = (1 << PIN5);
+  PORT->Group[PORTB].OUTCLR.reg = (1 << PIN4);
+  // PORT->Group[PORTB].OUTCLR.reg = (1 << PIN5);
   /* light_cube(weather_desc);
   if(i>500){
     i=0;
