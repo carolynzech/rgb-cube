@@ -9,7 +9,7 @@ int PIN10 = 19;
 int PIN11 = 8;
 int PIN12 = 9;
 int PINA0 = 2;
-int PINA4 = 4;
+int PINA3 = 4;
 
 // PORT B Group
 int PIN4 = 10;
@@ -119,21 +119,27 @@ void setup() {
 
   // while (read_webpage() < 0) poll_data();
 
-  PORT->Group[PORTA].DIRSET.reg = (1 << PIN10);
-  PORT->Group[PORTB].DIRSET.reg = (1 << PIN4);
-  PORT->Group[PORTA].DIRSET.reg = (1 << PIN11);
-  PORT->Group[PORTB].DIRSET.reg = (1 << PIN5);
-  PORT->Group[PORTA].DIRSET.reg = (1 << PIN12);
-  PORT->Group[PORTB].DIRSET.reg = (1 << PIN13);
+  PORT->Group[PORTA].DIRSET.reg = (1 << PIN10); // wire 9
+  PORT->Group[PORTB].DIRSET.reg = (1 << PIN4); // wire 3
+  PORT->Group[PORTA].DIRSET.reg = (1 << PIN11); // wire 10
+  PORT->Group[PORTB].DIRSET.reg = (1 << PIN5); // wire 4
+  PORT->Group[PORTA].DIRSET.reg = (1 << PIN12); // wire 11
+  PORT->Group[PORTB].DIRSET.reg = (1 << PIN13); // wire 12
 
+  // wire 8, 7, 6, 5
+  PORT->Group[PORTA].DIRSET.reg = (1 << PIN9);
+  PORT->Group[PORTA].DIRSET.reg = (1 << PIN8);
+  PORT->Group[PORTA].DIRSET.reg = (1 << PIN7);
+  PORT->Group[PORTA].DIRSET.reg = (1 << PIN6);
 
-  // ground for bottom 3rd row
-    PORT->Group[PORTA].DIRSET.reg = (1 << PIN3);
-  // ground for bottom 4th row
-    PORT->Group[PORTA].DIRSET.reg = (1 << PIN2);
+  // wire 13, 14, 15, 16
+    PORT->Group[PORTA].DIRSET.reg = (1 << PINA0);
+    PORT->Group[PORTA].DIRSET.reg = (1 << PINA3);
+    PORT->Group[PORTB].DIRSET.reg = (1 << PINA1);
+    PORT->Group[PORTB].DIRSET.reg = (1 << PINA2);
 
-
-  
+    PORT->Group[PORTA].DIRSET.reg = (1 << PIN3); // wire 1
+    PORT->Group[PORTA].DIRSET.reg = (1 << PIN2); // wire 2
   
   Serial.println("Done initializing!");
 }
@@ -218,7 +224,7 @@ void WDT_Handler() {
   // Warn user that a watchdog reset may happen
   Serial.println("Watchdog reset may happen!");
 }
-
+int pattern_counter = 0;
 /*
  * Lights the RGB cube using the charlieCube library based on the current
  * weather reading.
@@ -241,19 +247,54 @@ void light_cube(Weather weather) {
       // light cloudy
       break;
     default:
+    Serial.println(pattern_counter);
        // MAKE THE BOTTOM LAYER GREEN
   // set green legs on for bottom layer
+  if (pattern_counter % 4 == 0) {
+      // charliplexing: set pins uninvolved with bottom layer being green to INPUT
+  PORT->Group[PORTA].DIRCLR.reg = (1 << PIN9);
+  PORT->Group[PORTA].DIRCLR.reg = (1 << PIN8); 
+  PORT->Group[PORTA].DIRCLR.reg = (1 << PIN7); 
+  PORT->Group[PORTA].DIRCLR.reg = (1 << PIN6);   
+  PORT->Group[PORTA].DIRCLR.reg = (1 << PINA0);
+  PORT->Group[PORTA].DIRCLR.reg = (1 << PINA3);
+  PORT->Group[PORTB].DIRCLR.reg = (1 << PINA1);
+  PORT->Group[PORTB].DIRCLR.reg = (1 << PINA2);
+  
+  // turn bottom layer green
+  // drive green pins high
   PORT->Group[PORTA].OUTSET.reg = (1 << PIN12);
   PORT->Group[PORTB].OUTSET.reg = (1 << PIN13);
   PORT->Group[PORTA].OUTSET.reg = (1 << PIN10);
   PORT->Group[PORTA].OUTSET.reg = (1 << PIN11);
-
   PORT->Group[PORTB].OUTCLR.reg = (1 << PIN4); // set to be ground 1st on bottom layer
   PORT->Group[PORTA].OUTCLR.reg = (1 << PIN3); // set to be ground 4th on bottom layer
   PORT->Group[PORTA].OUTCLR.reg = (1 << PIN2); // set to be ground 3rd on bottom layer
   PORT->Group[PORTB].OUTCLR.reg = (1 << PIN5); // set to be ground 2nd on bottom layer
+  
+  pattern_counter++;
+  } else { //  if (pattern_counter % 4 == 1)
+    // MAKE THE SECOND TO BOTTOM LAYER GREEN
+  PORT->Group[PORTA].OUTCLR.reg = (1 << PIN9); // set to be ground
+  PORT->Group[PORTA].OUTCLR.reg = (1 << PIN8); 
+  PORT->Group[PORTA].OUTCLR.reg = (1 << PIN7); 
+  PORT->Group[PORTA].OUTCLR.reg = (1 << PIN6);   
 
-  // CLEAR THINGS WE SET; SO WE CAN MAKE NEXT PATTERN 
+  PORT->Group[PORTA].OUTSET.reg = (1 << PINA0); // set green leg
+  PORT->Group[PORTA].OUTSET.reg = (1 << PINA3);
+  PORT->Group[PORTB].OUTSET.reg = (1 << PINA1);
+  PORT->Group[PORTB].OUTSET.reg = (1 << PINA2);
+delay(5000);
+  // CLEAR
+  PORT->Group[PORTA].OUTCLR.reg = (1 << PINA0); 
+  PORT->Group[PORTA].OUTCLR.reg = (1 << PINA3);
+  PORT->Group[PORTB].OUTCLR.reg = (1 << PINA1);
+  PORT->Group[PORTB].OUTCLR.reg = (1 << PINA2);
+
+
+  
+ pattern_counter++;
+  }
       break;
   }
 }
@@ -266,9 +307,33 @@ skip the painful part of lab 3 (configuring interrupts to go in rising edges). s
 would have to change register names and hack of doing the mappings from pins to ports (datasheet -- which bit corresponds to which pin)
 */
 
-int pattern_counter = 0;
+
 void loop() {
-  light_cube(weather_desc);
+  PORT->Group[PORTA].OUTSET.reg = (1 << PIN9); // set to be ground
+  PORT->Group[PORTA].OUTSET.reg = (1 << PIN8); 
+  PORT->Group[PORTA].OUTSET.reg = (1 << PIN7); 
+  PORT->Group[PORTA].OUTSET.reg = (1 << PIN6);   
+
+  PORT->Group[PORTA].OUTCLR.reg = (1 << PINA0); // set green leg
+  PORT->Group[PORTA].OUTCLR.reg = (1 << PINA3);
+  PORT->Group[PORTB].OUTCLR.reg = (1 << PINA1);
+  PORT->Group[PORTB].OUTCLR.reg = (1 << PINA2);
+  // CLEAR
+  PORT->Group[PORTA].OUTCLR.reg = (1 << PINA0); 
+  PORT->Group[PORTA].OUTCLR.reg = (1 << PINA3);
+  PORT->Group[PORTB].OUTCLR.reg = (1 << PINA1);
+  PORT->Group[PORTB].OUTCLR.reg = (1 << PINA2);
+
+  // charlieplexing, set the uninvolved ones to be inputs
+  PORT->Group[PORTA].DIRCLR.reg = (1 << PIN12);
+  PORT->Group[PORTB].DIRCLR.reg = (1 << PIN13);
+  PORT->Group[PORTA].DIRCLR.reg = (1 << PIN10);
+  PORT->Group[PORTA].DIRCLR.reg = (1 << PIN11);
+  PORT->Group[PORTB].DIRCLR.reg = (1 << PIN4); 
+  PORT->Group[PORTA].DIRCLR.reg = (1 << PIN3); 
+  PORT->Group[PORTA].DIRCLR.reg = (1 << PIN2); 
+  PORT->Group[PORTB].DIRCLR.reg = (1 << PIN5); 
+ 
 
  
 
