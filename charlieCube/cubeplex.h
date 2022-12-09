@@ -330,9 +330,11 @@ void flushElement(_frame_light* &copy_frame,int pin1,int pin2,int brightness) {
   pin2--;
   
   (copy_frame+1)->next=copy_frame;
-  copy_frame++;
-  copy_frame->pin1=pin1 | ( brightness & 0xF0);
-  copy_frame->pin2=pin2 | ((brightness & 0x0F) << 4);
+  copy_frame++;// copy brightness values into each pin
+  // pin number in lower 4 bits, brightness in upper four bits
+  // he's storing the brightness with the pins and then decoding them later
+  copy_frame->pin1=pin1 | ( brightness & 0xF0); // bottom four bits of brightness in the first four bits and pin1 in the last four bits
+  copy_frame->pin2=pin2 | ((brightness & 0x0F) << 4); // last four bits of brightness in the first four bits and pin2 in the last four bits
   display_length++;
 }
 /******************************** FLUSH BUFFER ********************************\
@@ -561,21 +563,29 @@ byte pinsD[] = {P1D,P2D,P3D,P4D,P5D,P6D,P7D,P8D,P9D,P10D,P11D,P12D,P13D,P14D,P15
 #define FULL PWMMMAX
 #define HALF PWMMMAX/2
 // the interrupt function to display the leds
+// NEED THIS -- use logic from lab 4 to set up a timer that fires very quickly, don't need his niceTimer
 ISR(TIMER2_OVF_vect) {
   int pin1 = _cube_current_frame->pin1;
   int pin2 = _cube_current_frame->pin2;
-  int count = (pin1 & 0xF0) | ((pin2 & 0xF0)>>4);
+  int count = (pin1 & 0xF0) | ((pin2 & 0xF0)>>4); // reconstituting the brightness
   pin1 = pin1&0x0F;
   pin2 = pin2&0x0F;
   PORTB = 0x00;
   PORTC = 0x00;
   PORTD = 0x00;
+  // every time you go through all of the franes, increment pwmm, which tells you where you are in your duty cycle
+  // the higher the count (brightness), the longer you drive, so the brighter it appears
+  // the timer goes through the frames circularly, and for each frame, sets the pin to high if you're within the PWM duty cycle, otherwise low
+  // count is greater than pwmm if it's supposed to be brighter, so it enters this loop more, is driven high for longer and therefore appears brighter
+  // drive pin 1 high, pin 2 low, and rest to input
+  // interrupt will fire T / (PWMMAX * # of frames) --> more frames, faster it needs to go
   if (count > pwmm){
-  
+    // these are directions --> pins 1 and 2 are outputs, so everything else is an input
+    // ddr is the data direction register
     DDRB = pinsB[pin1] | pinsB[pin2];
     DDRC = pinsC[pin1] | pinsC[pin2];
     DDRD = pinsD[pin1] | pinsD[pin2];
-  
+
     PORTB = pinsB[pin1];
     PORTC = pinsC[pin1];
     PORTD = pinsD[pin1];

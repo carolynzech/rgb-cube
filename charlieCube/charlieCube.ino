@@ -408,3 +408,12 @@ void planarFlop3D() {
     color = nextColor(color);
   }
 }
+
+/* 
+In a main loop, configure the direction for the pin pairs for the leds, set them to be the only output ones (first one high, second one low), if it looks good don't need an interrupt. won't have pwm rn
+look at lab 3 for how you set direction and output
+issue with using digitalWrite is that that each iteration through the loop, you undo the action from the previous
+zeroing the port register does that reset much faster
+skip the painful part of lab 3 (configuring interrupts to go in rising edges). step 3 of lab 3 is where you blink an LED, write the port direction and output.
+would have to change register names and hack of doing the mappings from pins to ports (datasheet -- which bit corresponds to which pin)
+*/

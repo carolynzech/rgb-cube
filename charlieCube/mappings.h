@@ -98,7 +98,7 @@
 #define P12B 0x20
 #define P12C 0x00
 #define P12D 0x00
-
+// pin 13 is bit 1 on port c
 #define P13B 0x00
 #define P13C 0x01
 #define P13D 0x00

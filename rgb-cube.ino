@@ -1,4 +1,3 @@
-
 enum Weather {
   UNSUPPORTED,
   RAINY,
@@ -24,81 +23,84 @@ void setup() {
   Serial.println("Initialized Serial!");
   
 
-  setup_wifi();
+  // setup_wifi();
   // Initialized Wifi!
   
 
-  // Configure and enable GCLK4 for TC:
-  GCLK->GENDIV.reg = GCLK_GENDIV_DIV(0) | GCLK_GENDIV_ID(4); // do not divide gclk 4
-  while(GCLK->STATUS.bit.SYNCBUSY);
-  // use GCLK->GENCTRL.reg and GCLK->CLKCTRL.reg
-  GCLK->GENCTRL.reg = GCLK_GENCTRL_ID(0x04) | GCLK_GENCTRL_IDC | GCLK_GENCTRL_SRC(0x06) | GCLK_GENCTRL_GENEN;
-  while(GCLK->STATUS.bit.SYNCBUSY);
-  GCLK->CLKCTRL.reg = GCLK_CLKCTRL_GEN(0x4) | GCLK_CLKCTRL_ID(0x1b) | GCLK_CLKCTRL_CLKEN;
+//   // Configure and enable GCLK4 for TC:
+//   GCLK->GENDIV.reg = GCLK_GENDIV_DIV(0) | GCLK_GENDIV_ID(4); // do not divide gclk 4
+//   while(GCLK->STATUS.bit.SYNCBUSY);
+//   // use GCLK->GENCTRL.reg and GCLK->CLKCTRL.reg
+//   GCLK->GENCTRL.reg = GCLK_GENCTRL_ID(0x04) | GCLK_GENCTRL_IDC | GCLK_GENCTRL_SRC(0x06) | GCLK_GENCTRL_GENEN;
+//   while(GCLK->STATUS.bit.SYNCBUSY);
+//   GCLK->CLKCTRL.reg = GCLK_CLKCTRL_GEN(0x4) | GCLK_CLKCTRL_ID(0x1b) | GCLK_CLKCTRL_CLKEN;
 
-  // Check if APB is enabled:
-  Serial.println(PM->APBCMASK.reg & PM_APBCMASK_TC3, BIN);
-  // use PM->APBX.reg (change X to the correct letter and mask the relevant bit)
+//   // Check if APB is enabled:
+//   Serial.println(PM->APBCMASK.reg & PM_APBCMASK_TC3, BIN);
+//   // use PM->APBX.reg (change X to the correct letter and mask the relevant bit)
 
-  // Disable TC (for now)
-  // use TC3->COUNT16.CTRLA.reg and TC3->COUNT16.INTENCLR.reg
-//  TC3->COUNT16.INTENCLR.bit.MC0 = 1;
-//  TC3->COUNT16.CTRLA.bit.ENABLE = 0;
-//  while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
+//   // Disable TC (for now)
+//   // use TC3->COUNT16.CTRLA.reg and TC3->COUNT16.INTENCLR.reg
+// //  TC3->COUNT16.INTENCLR.bit.MC0 = 1;
+// //  TC3->COUNT16.CTRLA.bit.ENABLE = 0;
+// //  while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
 
-  // Set up NVIC:
-  NVIC_SetPriority(TC3_IRQn, 0);
-  NVIC_EnableIRQ(TC3_IRQn);
+//   // Set up NVIC:
+//   NVIC_SetPriority(TC3_IRQn, 0);
+//   NVIC_EnableIRQ(TC3_IRQn);
 
-  Serial.println("Initialized Timer!");
+//   Serial.println("Initialized Timer!");
 
 
-  // Clear and enable WDT
-  // Ear;y-warning interrupt
-  NVIC_DisableIRQ(WDT_IRQn);
-  NVIC_ClearPendingIRQ(WDT_IRQn);
-  NVIC_SetPriority(WDT_IRQn, 0); //top priority
-  NVIC_EnableIRQ(WDT_IRQn);
+//   // Clear and enable WDT
+//   // Ear;y-warning interrupt
+//   NVIC_DisableIRQ(WDT_IRQn);
+//   NVIC_ClearPendingIRQ(WDT_IRQn);
+//   NVIC_SetPriority(WDT_IRQn, 0); //top priority
+//   NVIC_EnableIRQ(WDT_IRQn);
 
-  // Configure and enable WDT GCLK:
-  GCLK->GENDIV.reg = GCLK_GENDIV_DIV(4) | GCLK_GENDIV_ID(5);
-  while (GCLK->STATUS.bit.SYNCBUSY);
-  GCLK->GENCTRL.reg = GCLK_GENCTRL_DIVSEL | GCLK_GENCTRL_ID(0x5) | GCLK_GENCTRL_SRC(0x03) | GCLK_GENCTRL_GENEN;
-  while (GCLK->STATUS.bit.SYNCBUSY);
-  GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN(0x5) | GCLK_CLKCTRL_ID(0x03);
+//   // Configure and enable WDT GCLK:
+//   GCLK->GENDIV.reg = GCLK_GENDIV_DIV(4) | GCLK_GENDIV_ID(5);
+//   while (GCLK->STATUS.bit.SYNCBUSY);
+//   GCLK->GENCTRL.reg = GCLK_GENCTRL_DIVSEL | GCLK_GENCTRL_ID(0x5) | GCLK_GENCTRL_SRC(0x03) | GCLK_GENCTRL_GENEN;
+//   while (GCLK->STATUS.bit.SYNCBUSY);
+//   GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN(0x5) | GCLK_CLKCTRL_ID(0x03);
 
-  // Configure and enable WDT:
-  WDT->CONFIG.reg = 0x9;
+//   // Configure and enable WDT:
+//   WDT->CONFIG.reg = 0x9;
 
-  // Enable early warning interrupts on WDT:
-  WDT->EWCTRL.reg = 0x8;
-  WDT->CTRL.reg = WDT_CTRL_ENABLE;
-  while (WDT->STATUS.bit.SYNCBUSY);
-  WDT->INTENSET.bit.EW = 1;
-  Serial.println("Initialized Watchdog Timer!");
+//   // Enable early warning interrupts on WDT:
+//   WDT->EWCTRL.reg = 0x8;
+//   WDT->CTRL.reg = WDT_CTRL_ENABLE;
+//   while (WDT->STATUS.bit.SYNCBUSY);
+//   WDT->INTENSET.bit.EW = 1;
+//   Serial.println("Initialized Watchdog Timer!");
 
   
-  // Enable the timer/counter
-  // Turn off interrupts to TC3 on MC0 when configuring
-  TC3->COUNT16.INTENCLR.bit.MC0 = 1;
-  while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
+//   // Enable the timer/counter
+//   // Turn off interrupts to TC3 on MC0 when configuring
+//   TC3->COUNT16.INTENCLR.bit.MC0 = 1;
+//   while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
 
-  // configure TC
-  TC3->COUNT16.CTRLA.bit.MODE = 0x0;
-  TC3->COUNT16.CTRLA.bit.PRESCALER = 0x1f;
-  TC3->COUNT16.CTRLA.bit.PRESCSYNC = 0x1;
-  TC3->COUNT16.CTRLA.bit.WAVEGEN = 0x1;
-  TC3->COUNT16.CTRLA.bit.ENABLE = 1;
-  TC3->COUNT16.CC[0].reg = 6000000;
+//   // configure TC
+//   TC3->COUNT16.CTRLA.bit.MODE = 0x0;
+//   TC3->COUNT16.CTRLA.bit.PRESCALER = 0x1f;
+//   TC3->COUNT16.CTRLA.bit.PRESCSYNC = 0x1;
+//   TC3->COUNT16.CTRLA.bit.WAVEGEN = 0x1;
+//   TC3->COUNT16.CTRLA.bit.ENABLE = 1;
+//   TC3->COUNT16.CC[0].reg = 6000000;
   
-  // Turn interrupts to TC3 on MC0 back on when done configuring
-  TC3->COUNT16.INTENSET.bit.MC0 = 1;
-  while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
+//   // Turn interrupts to TC3 on MC0 back on when done configuring
+//   TC3->COUNT16.INTENSET.bit.MC0 = 1;
+//   while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
   
-  poll_time = millis();
-  prev_poll_time = millis();
+//   poll_time = millis();
+//   prev_poll_time = millis();
 
-  while (read_webpage() < 0) poll_data();
+  // while (read_webpage() < 0) poll_data();
+
+  PORT->Group[PORTA].DIRSET.reg = (1 << 20); // pin 6
+  PORT->Group[PORTA].DIRSET.reg = (1 << 22); // pin 0
   
   Serial.println("Done initializing!");
 }
@@ -212,13 +214,21 @@ void light_cube(Weather weather) {
 }
 
 int i=0;
+/* 
+In a main loop, configure the direction for the pin pairs for the leds, set them to be the only output ones (first one high, second one low), if it looks good don't need an interrupt. won't have pwm rn
+look at lab 3 for how you set direction and output
+skip the painful part of lab 3 (configuring interrupts to go in rising edges). step 3 of lab 3 is where you blink an LED, write the port direction and output.
+would have to change register names and hack of doing the mappings from pins to ports (datasheet -- which bit corresponds to which pin)
+*/
 void loop() {
-  light_cube(weather_desc);
+  PORT->Group[PORTA].OUTSET.reg = (1 << 20); // turn on led at pin 6
+  PORT->Group[PORTA].OUTCLR.reg = (1 << 22); // turn on ground at pin 0
+  /* light_cube(weather_desc);
   if(i>500){
     i=0;
     Serial.print("Current weather: ");
     Serial.println(weather_desc);
-    if (intcount >= 6) { // spprox every 30 seconds
+    if (intcount >= 6) { // approx every 30 seconds
       poll_data();
     }
   }
@@ -227,5 +237,5 @@ void loop() {
   check_connection();
   
   // pet watchdog
-  WDT->CLEAR.reg = 0xa5;
+  WDT->CLEAR.reg = 0xa5; */
 }
