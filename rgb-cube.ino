@@ -26,6 +26,12 @@ enum Weather {
   CLOUDY
 };
 
+enum Color {
+  RED,
+  GREEN,
+  BLUE
+};
+
 volatile int poll_time;
 volatile int prev_poll_time;
 volatile int intcount = 0;
