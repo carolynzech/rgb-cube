@@ -73,6 +73,8 @@ void setup() {
 
   PORT->Group[PORTA].DIRSET.reg = (1 << PIN3); // wire 1
   PORT->Group[PORTA].DIRSET.reg = (1 << PIN2); // wire 2
+
+
   // Configure and enable GCLK4 for TC:
   GCLK->GENDIV.reg = GCLK_GENDIV_DIV(0) | GCLK_GENDIV_ID(4); // do not divide gclk 4
   while(GCLK->STATUS.bit.SYNCBUSY);
@@ -137,7 +139,7 @@ void setup() {
 
 /*
  * Determines if a speficic int token is found in a
- * list of int. Assumes the list is terminated with -1.
+ * list of non-(-1) ints. Assumes the list is terminated with -1.
  *
  * token - the int that we are searching for
  * list - the array of ints that we are looking
@@ -163,7 +165,7 @@ int is_in(int token, int list[]) {
  * returns nothing. updates the global weather_desc.
  */
 void update_fsm(int weather_type) {
-  
+
   if (is_in(weather_type, sun_list)) {
     weather_desc = SUNNY;
   } else if (is_in(weather_type, cloud_list)) {
@@ -185,6 +187,7 @@ void update_fsm(int weather_type) {
  *
  * no inputs, returns nothing. updates the weather_desc global.
  */
+# ifndef TESTING
 void poll_data() {
   // call API
   int response = read_webpage();
@@ -201,6 +204,15 @@ void poll_data() {
     intcount = 0; // reset counter since we successfully polled
   }
 }
+# else
+void poll_data() {
+  // call API
+  mock_poll_success = true; // api call
+  poll_time = millis();
+  update_fsm(mock_response);
+  prev_poll_time = poll_time;
+}
+# endif
 
 void TC3_Handler() {
   // Clear interrupt register flag
@@ -224,7 +236,7 @@ void WDT_Handler() {
   // Warn user that a watchdog reset may happen
   Serial.println("Watchdog reset may happen!");
 }
-int pattern_counter = 0;
+
 /*
  * Lights the RGB cube using the charlieCube library based on the current
  * weather reading.
@@ -251,13 +263,10 @@ void light_cube(Weather weather) {
   }
 }
 
-int i=0;
-
 void loop() {
-  // pet watchdog
-  WDT->CLEAR.reg = 0xa5;
-
   light_cube(weather_desc);
   check_connection();
   
+  // pet watchdog
+  WDT->CLEAR.reg = 0xa5;
 }
