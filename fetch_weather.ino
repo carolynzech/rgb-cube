@@ -40,6 +40,26 @@ bool connect_to_webpage() {
   }
 }
 
+int get_weather_from_time(char* time_ptr) {
+  int weather_code = -1;
+  if (time_ptr != NULL) {
+    const char* weather_code_digit_one = time_ptr - 4;
+    const char* weather_code_digit_two = time_ptr - 3;
+    
+    if (*weather_code_digit_one == ':') { // weather code is one digit
+      weather_code = std::atoi(weather_code_digit_two);
+    } else { // weather code is two digits
+      char arr[3];
+      arr[0] = *weather_code_digit_one;
+      arr[1] = *weather_code_digit_two;
+      arr[2] = '\0';
+      const char* const_arr = arr;
+      weather_code = std::atoi(const_arr);
+    }
+  }
+  return weather_code;
+}
+
 // -1 error means client unavailable, -2 means just haven't read enough bytes to reach weather code yet
 int read_webpage() {
     // Check for bytes to read
@@ -54,24 +74,8 @@ int read_webpage() {
     buffer[index] = c;
     index++;
     char* time_ptr = strstr(buffer, "time\":");
-    int weather_code = -2;
-    if (time_ptr != NULL) {
-      const char* weather_code_digit_one = time_ptr - 4;
-      const char* weather_code_digit_two = time_ptr - 3;
-      
-      if (*weather_code_digit_one == ':') { // weather code is one digit
-        weather_code = std::atoi(weather_code_digit_two);
-      } else { // weather code is two digits
-        char arr[3];
-        arr[0] = *weather_code_digit_one;
-        arr[1] = *weather_code_digit_two;
-        arr[2] = '\0';
-        const char* const_arr = arr;
-        weather_code = std::atoi(const_arr);
-      }
-      
-      return weather_code;
-    }
+    int weather_code = get_weather_from_time(time_ptr);
+    if (weather_code > 0) return weather_code;
   }
   return -1;
 }

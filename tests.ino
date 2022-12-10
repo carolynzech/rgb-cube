@@ -171,3 +171,41 @@ void test_TC3_Handler() {
   // check that global has been set by poll_data mock
   assert(mock_poll_success);
 }
+
+void test_get_weather_from_time() {
+  // single digit code
+  char *overcast = ".0,\"weathercode\":3,\"time\":";
+  char *time_ptr = strstr(overcast, "time\":");
+  assert(get_weather_from_time(time_ptr) == 3);
+
+  char *mainly_clear = "1,\"time\":";
+  char *time_ptr = strstr(mainly_clear, "time\":");
+  assert(get_weather_from_time(time_ptr) == 1);
+
+  // code is 0
+  char *clear_sky = "code\":0,\"time\":";
+  char *time_ptr = strstr(clear_sky, "time\":");
+  assert(get_weather_from_time(time_ptr) == 0);
+  
+  // double digit code
+  char *fog = "45,\"time\":";
+  char *time_ptr = strstr(fog, "time\":");
+  assert(get_weather_from_time(time_ptr) == 45);
+
+  char *snow_grains = "\"weathercode\":77,\"time\":";
+  char *time_ptr = strstr(snow_grains, "time\":");
+  assert(get_weather_from_time(time_ptr) == 77);
+
+  // unsupported weathe found
+  char *unsupported = "\"weathercode\":58,\"time\":";
+  char *time_ptr = strstr(unsupported, "time\":");
+  assert(get_weather_from_time(time_ptr) == 58);
+
+  // not a number
+  char *nan = "\"weathercode\":,\"time\":";
+  char *time_ptr = strstr(nan, "time\":");
+  assert(get_weather_from_time(time_ptr) == -1);
+
+  // time was not found in response
+  assert(get_weather_from_time(NULL) == -1);
+}
