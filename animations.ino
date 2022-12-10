@@ -419,13 +419,3 @@ void cloudy_pwm() {
   analogWrite(4, 200);
   analogWrite(5, 200);
 }
-
-// void multicolor_solid(Color colors[]) {
-//   if (sizeof(colors) / sizeof(Color) > 4) {
-//     Serial.println("Error: multicolor_solid cannot support more than 4 colors");
-//     return;
-//   }
-//   // for (int color : colors) {
-
-//   // }
-// }

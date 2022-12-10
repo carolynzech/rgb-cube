@@ -163,8 +163,7 @@ int is_in(int token, int list[]) {
  * returns nothing. updates the global weather_desc.
  */
 void update_fsm(int weather_type) {
-  // Serial.println("Weather type is: ");
-  // Serial.println(weather_type);
+  
   if (is_in(weather_type, sun_list)) {
     weather_desc = SUNNY;
   } else if (is_in(weather_type, cloud_list)) {
@@ -176,8 +175,7 @@ void update_fsm(int weather_type) {
   } else {
     weather_desc = UNSUPPORTED;
   }
-  // Serial.println("Weather desc is: ");
-  // Serial.println(weather_desc);
+  
 }
 
 /*

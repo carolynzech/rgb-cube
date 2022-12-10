@@ -54,25 +54,22 @@ int read_webpage() {
     buffer[index] = c;
     index++;
     char* time_ptr = strstr(buffer, "time\":");
-    // char weather_code_digit_one;
-    // char weather_code_digit_two;
     int weather_code = -2;
     if (time_ptr != NULL) {
-      const char* a = time_ptr - 4;
-      const char* b = time_ptr - 3;
-      Serial.println(a);
-      Serial.println(b);
-      if (*a == ':') { // weather code is one digit
-        weather_code = std::atoi(b);
+      const char* weather_code_digit_one = time_ptr - 4;
+      const char* weather_code_digit_two = time_ptr - 3;
+      
+      if (*weather_code_digit_one == ':') { // weather code is one digit
+        weather_code = std::atoi(weather_code_digit_two);
       } else { // weather code is two digits
         char arr[3];
-        arr[0] = *a;
-        arr[1] = *b;
+        arr[0] = *weather_code_digit_one;
+        arr[1] = *weather_code_digit_two;
         arr[2] = '\0';
-        const char* arr2 = arr;
-        weather_code = std::atoi(arr2);
+        const char* const_arr = arr;
+        weather_code = std::atoi(const_arr);
       }
-      Serial.println(weather_code);
+      
       return weather_code;
     }
   }
