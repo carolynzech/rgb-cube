@@ -194,7 +194,7 @@ void poll_data() {
   int try_read = millis();
   if (response == -1) {
     Serial.println("Failed to read weather... trying again.");
-  } else {
+  } else if (response != -2) {
     poll_time = millis();
     Serial.print("Data polled! Last poll was ");
     Serial.print((poll_time - prev_poll_time) / 100);
@@ -264,8 +264,10 @@ void light_cube(Weather weather) {
 }
 
 void loop() {
-  light_cube(weather_desc);
-  check_connection();
+  // light_cube(weather_desc);
+  all_layers_solid(BLUE, 200);
+
+  // check_connection();
   
   // pet watchdog
   WDT->CLEAR.reg = 0xa5;
