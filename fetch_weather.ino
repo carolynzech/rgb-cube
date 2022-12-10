@@ -28,7 +28,8 @@ void setup_wifi() {
 
 bool connect_to_webpage() {
   if (client.connect("api.open-meteo.com", 80)) {
-    client.println("GET /v1/forecast?latitude=41.82&longitude=-71.41&current_weather=true HTTP/1.1");
+    client.println("GET /v1/forecast?latitude=41.82&longitude=-71.41&current_weather=true HTTP/1.1"); // providence
+    // client.println("GET /v1/forecast?latitude=48.13&longitude=11.58&current_weather=true HTTP/1.1"); // munich
     client.println("Host: api.open-meteo.com");
     client.println("Connection: close");
     client.println();
@@ -53,21 +54,25 @@ int read_webpage() {
     buffer[index] = c;
     index++;
     char* time_ptr = strstr(buffer, "time\":");
-    char weather_code_digit_one;
-    char weather_code_digit_two;
+    // char weather_code_digit_one;
+    // char weather_code_digit_two;
     int weather_code = -2;
     if (time_ptr != NULL) {
-      weather_code_digit_one = *(time_ptr - 4);
-      weather_code_digit_two = *(time_ptr - 3);
-      if (weather_code_digit_one == ':') { // weather code is one digit
-        weather_code = int(weather_code_digit_two);
+      const char* a = time_ptr - 4;
+      const char* b = time_ptr - 3;
+      Serial.println(a);
+      Serial.println(b);
+      if (*a == ':') { // weather code is one digit
+        weather_code = std::atoi(b);
       } else { // weather code is two digits
         char arr[3];
-        arr[0] = weather_code_digit_one;
-        arr[1] = weather_code_digit_two;
+        arr[0] = *a;
+        arr[1] = *b;
         arr[2] = '\0';
-        weather_code = int(arr);
+        const char* arr2 = arr;
+        weather_code = std::atoi(arr2);
       }
+      Serial.println(weather_code);
       return weather_code;
     }
   }

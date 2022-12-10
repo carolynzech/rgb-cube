@@ -22,7 +22,7 @@ enum Weather {
   UNSUPPORTED,
   RAINY,
   SUNNY,
-  THUNDERSTORM,
+  SNOWY,
   CLOUDY
 };
 
@@ -34,15 +34,15 @@ enum Color {
 
 volatile int poll_time;
 volatile int prev_poll_time;
-volatile int intcount = 0;
+volatile int intcount = 6;
 
 Weather weather_desc = UNSUPPORTED;
 
 // translate weather codes to the supported weather patterns. terminate with -1
 int sun_list[] = {0, 1, 2, -1};
 int cloud_list[] = {3, 45, 48, -1};
-int rain_list[] = {51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, -1};
-int tstorm_list[] = {95, 96, 99, -1};
+int rain_list[] = {51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99, -1};
+int snow_list[] = {71, 73, 75, 77, 85, 86, -1};
 
 void setup() {
   Serial.begin(9600);
@@ -102,7 +102,7 @@ void setup() {
   GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN(0x5) | GCLK_CLKCTRL_ID(0x03);
 
   // Configure and enable WDT:
-  WDT->CONFIG.reg = 0x9;
+  WDT->CONFIG.reg = 0xB;
 
   // Enable early warning interrupts on WDT:
   WDT->EWCTRL.reg = 0x8;
@@ -115,10 +115,6 @@ void setup() {
   poll_time = millis();
   prev_poll_time = millis();
 
-  while (int response = read_webpage() < 0) update_fsm(response);
-  Serial.println("Done polling initial weather value!");
-
-  
   // Enable the timer/counter
   // Turn off interrupts to TC3 on MC0 when configuring
   TC3->COUNT16.INTENCLR.bit.MC0 = 1;
@@ -167,17 +163,21 @@ int is_in(int token, int list[]) {
  * returns nothing. updates the global weather_desc.
  */
 void update_fsm(int weather_type) {
+  // Serial.println("Weather type is: ");
+  // Serial.println(weather_type);
   if (is_in(weather_type, sun_list)) {
     weather_desc = SUNNY;
   } else if (is_in(weather_type, cloud_list)) {
     weather_desc = CLOUDY;
   } else if (is_in(weather_type, rain_list)) {
     weather_desc = RAINY;
-  } else if (is_in(weather_type, tstorm_list)) {
-    weather_desc = THUNDERSTORM;
+  } else if (is_in(weather_type, snow_list)) {
+    weather_desc = SNOWY;
   } else {
     weather_desc = UNSUPPORTED;
   }
+  // Serial.println("Weather desc is: ");
+  // Serial.println(weather_desc);
 }
 
 /*
@@ -210,8 +210,8 @@ void TC3_Handler() {
   TC3->COUNT16.INTFLAG.bit.MC0 = 1;
 
   // print the current weathter status
-  Serial.print("Current weather: ");
-  Serial.println(weather_desc);
+  // Serial.print("Current weather: ");
+  // Serial.println(weather_desc);
   
   intcount++; // counter increases every approx. 4.6 seconds
   if (intcount >= 5) { // after approx 23 seconds since last successful poll
@@ -237,111 +237,29 @@ int pattern_counter = 0;
 void light_cube(Weather weather) {
   switch (weather) {
     case RAINY:
-      // light blue
+      all_layers_solid(BLUE, 200);
       break;
     case SUNNY: // clear skies
-      // light yellow
+      all_layers_solid(GREEN, 1);
       break;
-    case THUNDERSTORM:
-      // light thunderstorm
+    case SNOWY:
+      make_rainbow(1);
       break;
     case CLOUDY:
-      // light cloudy
+      cloudy_pwm();
       break;
     default:
-    Serial.println(pattern_counter);
-       // MAKE THE BOTTOM LAYER GREEN
-  // set green legs on for bottom layer
-  if (pattern_counter % 4 == 0) {
-      // charliplexing: set pins uninvolved with bottom layer being green to INPUT
-  PORT->Group[PORTA].DIRCLR.reg = (1 << PIN9);
-  PORT->Group[PORTA].DIRCLR.reg = (1 << PIN8); 
-  PORT->Group[PORTA].DIRCLR.reg = (1 << PIN7); 
-  PORT->Group[PORTA].DIRCLR.reg = (1 << PIN6);   
-  PORT->Group[PORTA].DIRCLR.reg = (1 << PINA0);
-  PORT->Group[PORTA].DIRCLR.reg = (1 << PINA3);
-  PORT->Group[PORTB].DIRCLR.reg = (1 << PINA1);
-  PORT->Group[PORTB].DIRCLR.reg = (1 << PINA2);
-  
-  // turn bottom layer green
-  // drive green pins high
-  PORT->Group[PORTA].OUTSET.reg = (1 << PIN12);
-  PORT->Group[PORTB].OUTSET.reg = (1 << PIN13);
-  PORT->Group[PORTA].OUTSET.reg = (1 << PIN10);
-  PORT->Group[PORTA].OUTSET.reg = (1 << PIN11);
-  PORT->Group[PORTB].OUTCLR.reg = (1 << PIN4); // set to be ground 1st on bottom layer
-  PORT->Group[PORTA].OUTCLR.reg = (1 << PIN3); // set to be ground 4th on bottom layer
-  PORT->Group[PORTA].OUTCLR.reg = (1 << PIN2); // set to be ground 3rd on bottom layer
-  PORT->Group[PORTB].OUTCLR.reg = (1 << PIN5); // set to be ground 2nd on bottom layer
-  
-  pattern_counter++;
-  } else { //  if (pattern_counter % 4 == 1)
-    // MAKE THE SECOND TO BOTTOM LAYER GREEN
-  PORT->Group[PORTA].OUTCLR.reg = (1 << PIN9); // set to be ground
-  PORT->Group[PORTA].OUTCLR.reg = (1 << PIN8); 
-  PORT->Group[PORTA].OUTCLR.reg = (1 << PIN7); 
-  PORT->Group[PORTA].OUTCLR.reg = (1 << PIN6);   
-
-  PORT->Group[PORTA].OUTSET.reg = (1 << PINA0); // set green leg
-  PORT->Group[PORTA].OUTSET.reg = (1 << PINA3);
-  PORT->Group[PORTB].OUTSET.reg = (1 << PINA1);
-  PORT->Group[PORTB].OUTSET.reg = (1 << PINA2);
-delay(5000);
-  // CLEAR
-  PORT->Group[PORTA].OUTCLR.reg = (1 << PINA0); 
-  PORT->Group[PORTA].OUTCLR.reg = (1 << PINA3);
-  PORT->Group[PORTB].OUTCLR.reg = (1 << PINA1);
-  PORT->Group[PORTB].OUTCLR.reg = (1 << PINA2);
-
-
-  
- pattern_counter++;
-  }
-      break;
+      turn_lights_off();
   }
 }
 
 int i=0;
 
 void loop() {
-  PORT->Group[PORTA].OUTSET.reg = (1 << PIN9); // set to be ground
-  PORT->Group[PORTA].OUTSET.reg = (1 << PIN8); 
-  PORT->Group[PORTA].OUTSET.reg = (1 << PIN7); 
-  PORT->Group[PORTA].OUTSET.reg = (1 << PIN6);   
-
-  PORT->Group[PORTA].OUTCLR.reg = (1 << PINA0); // set green leg
-  PORT->Group[PORTA].OUTCLR.reg = (1 << PINA3);
-  PORT->Group[PORTB].OUTCLR.reg = (1 << PINA1);
-  PORT->Group[PORTB].OUTCLR.reg = (1 << PINA2);
-  // CLEAR
-  PORT->Group[PORTA].OUTCLR.reg = (1 << PINA0); 
-  PORT->Group[PORTA].OUTCLR.reg = (1 << PINA3);
-  PORT->Group[PORTB].OUTCLR.reg = (1 << PINA1);
-  PORT->Group[PORTB].OUTCLR.reg = (1 << PINA2);
-
-  // charlieplexing, set the uninvolved ones to be inputs
-  PORT->Group[PORTA].DIRCLR.reg = (1 << PIN12);
-  PORT->Group[PORTB].DIRCLR.reg = (1 << PIN13);
-  PORT->Group[PORTA].DIRCLR.reg = (1 << PIN10);
-  PORT->Group[PORTA].DIRCLR.reg = (1 << PIN11);
-  PORT->Group[PORTB].DIRCLR.reg = (1 << PIN4); 
-  PORT->Group[PORTA].DIRCLR.reg = (1 << PIN3); 
-  PORT->Group[PORTA].DIRCLR.reg = (1 << PIN2); 
-  PORT->Group[PORTB].DIRCLR.reg = (1 << PIN5); 
-
-  /* light_cube(weather_desc);
-  if(i>500){
-    i=0;
-    Serial.print("Current weather: ");
-    Serial.println(weather_desc);
-    if (intcount >= 6) { // approx every 30 seconds
-      poll_data();
-    }
-  }
-  i++;
-
-  check_connection();
-
   // pet watchdog
-  WDT->CLEAR.reg = 0xa5; */
+  WDT->CLEAR.reg = 0xa5;
+
+  light_cube(weather_desc);
+  check_connection();
+  
 }
