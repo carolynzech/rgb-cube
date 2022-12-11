@@ -26,6 +26,10 @@ void setup_wifi() {
   }
 }
 
+/* 
+ * Attempts to connect to the weather API and get the weather for specified location
+ * Returns boolean: true for successful connection, false otherwise
+ */
 bool connect_to_webpage() {
   if (client.connect("api.open-meteo.com", 80)) {
     client.println("GET /v1/forecast?latitude=41.82&longitude=-71.41&current_weather=true HTTP/1.1"); // providence
@@ -40,8 +44,16 @@ bool connect_to_webpage() {
   }
 }
 
+/*
+ * Parses the response from the weather API. Desired information is in form "weathercode: (int)", 
+ * where the integer maps to a weather state (see lists in rgb-cube.ino).
+ * Input: pointer to "time". The string comes back in form 
+ * {... "weathercode":__,"time":"..."}, where weathercode is a one or two digit integer.
+ * Returns int: weather code returned from API.
+*/
 int get_weather_from_time(char* time_ptr) {
   int weather_code;
+  // weather code is 3/4 digits back from "time", depending on # of digits
   const char* weather_code_digit_one = time_ptr - 4;
   const char* weather_code_digit_two = time_ptr - 3;
   
@@ -58,7 +70,10 @@ int get_weather_from_time(char* time_ptr) {
   return weather_code;
 }
 
-// -1 error means client unavailable
+/*
+ * Reads response from the weather API
+ * Returns int: -1 if client unavailable, and weather code otherwise
+*/
 int read_webpage() {
     // Check for bytes to read
   int len = client.available();
@@ -72,6 +87,7 @@ int read_webpage() {
     buffer[index] = c;
     index++;
     char* time_ptr = strstr(buffer, "time\":");
+    // "time:" comes immediately after weathercode, so if it's not null, we are ready to parse the weather code
     if (time_ptr != NULL) {
       return get_weather_from_time(time_ptr);
     }

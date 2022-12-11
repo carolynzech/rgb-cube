@@ -38,7 +38,7 @@ volatile int intcount = 6;
 
 Weather weather_desc = UNSUPPORTED;
 
-// translate weather codes to the supported weather patterns. terminate with -1
+// translate weather codes provided by the API to the supported weather patterns. terminate with -1
 int sun_list[] = {0, 1, 2, -1};
 int cloud_list[] = {3, 45, 48, -1};
 int rain_list[] = {51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99, -1};
@@ -50,30 +50,24 @@ void setup() {
   Serial.println("Initialized Serial!");
   
   setup_wifi();
-  // Initialized Wifi!
-
-  PORT->Group[PORTA].DIRSET.reg = (1 << PIN10); // wire 9
-  PORT->Group[PORTB].DIRSET.reg = (1 << PIN4); // wire 3
-  PORT->Group[PORTA].DIRSET.reg = (1 << PIN11); // wire 10
-  PORT->Group[PORTB].DIRSET.reg = (1 << PIN5); // wire 4
-  PORT->Group[PORTA].DIRSET.reg = (1 << PIN12); // wire 11
-  PORT->Group[PORTB].DIRSET.reg = (1 << PIN13); // wire 12
-
-  // wire 8, 7, 6, 5
+  
+  // set all 16 pins to an output  
+  PORT->Group[PORTA].DIRSET.reg = (1 << PIN10);
+  PORT->Group[PORTB].DIRSET.reg = (1 << PIN4);
+  PORT->Group[PORTA].DIRSET.reg = (1 << PIN11);
+  PORT->Group[PORTB].DIRSET.reg = (1 << PIN5);
+  PORT->Group[PORTA].DIRSET.reg = (1 << PIN12);
+  PORT->Group[PORTB].DIRSET.reg = (1 << PIN13);
   PORT->Group[PORTA].DIRSET.reg = (1 << PIN9);
   PORT->Group[PORTA].DIRSET.reg = (1 << PIN8);
   PORT->Group[PORTA].DIRSET.reg = (1 << PIN7);
   PORT->Group[PORTA].DIRSET.reg = (1 << PIN6);
-
-  // wire 13, 14, 15, 16
   PORT->Group[PORTA].DIRSET.reg = (1 << PINA0);
   PORT->Group[PORTA].DIRSET.reg = (1 << PINA3);
   PORT->Group[PORTB].DIRSET.reg = (1 << PINA1);
   PORT->Group[PORTB].DIRSET.reg = (1 << PINA2);
-
-  PORT->Group[PORTA].DIRSET.reg = (1 << PIN3); // wire 1
-  PORT->Group[PORTA].DIRSET.reg = (1 << PIN2); // wire 2
-
+  PORT->Group[PORTA].DIRSET.reg = (1 << PIN3);
+  PORT->Group[PORTA].DIRSET.reg = (1 << PIN2);
 
   // Configure and enable GCLK4 for TC:
   GCLK->GENDIV.reg = GCLK_GENDIV_DIV(0) | GCLK_GENDIV_ID(4); // do not divide gclk 4
@@ -194,7 +188,7 @@ void poll_data() {
   int try_read = millis();
   if (response == -1) {
     Serial.println("Failed to read weather... trying again.");
-  } else if (response != -2) {
+  } else {
     poll_time = millis();
     Serial.print("Data polled! Last poll was ");
     Serial.print((poll_time - prev_poll_time) / 100);
@@ -220,8 +214,8 @@ void TC3_Handler() {
   TC3->COUNT16.INTFLAG.bit.MC0 = 1;
 
   // print the current weathter status
-  // Serial.print("Current weather: ");
-  // Serial.println(weather_desc);
+  Serial.print("Current weather: ");
+  Serial.println(weather_desc);
   
   intcount++; // counter increases every approx. 4.6 seconds
   if (intcount >= 5) { // after approx 23 seconds since last successful poll
@@ -264,10 +258,8 @@ void light_cube(Weather weather) {
 }
 
 void loop() {
-  // light_cube(weather_desc);
-  all_layers_solid(BLUE, 200);
-
-  // check_connection();
+  light_cube(weather_desc);
+  check_connection();
   
   // pet watchdog
   WDT->CLEAR.reg = 0xa5;
