@@ -1,3 +1,5 @@
+
+# ifndef TESTING
 void turn_lights_off() {
   PORT->Group[PORTA].OUTCLR.reg = (1 << PIN10); // wire 9
   PORT->Group[PORTB].OUTCLR.reg = (1 << PIN4); // wire 3
@@ -398,13 +400,6 @@ void make_white(int delay_time) {
   top_layer_solid(BLUE, delay_time);
 }
 
-void all_layers_solid(Color color, int delay_time) {
-  top_layer_solid(color, delay_time);
-  third_layer_solid(color, delay_time);
-  second_layer_solid(color, delay_time);
-  bottom_layer_solid(color, delay_time);
-}
-
 // use pwm signal to make bottom layer (dim) blue
 // demonstrates what happens without charlieplexing -- other lights will also light up
 void cloudy_pwm() {
@@ -412,4 +407,70 @@ void cloudy_pwm() {
   analogWrite(3, 200);
   analogWrite(4, 200);
   analogWrite(5, 200);
+}
+
+
+# else // testing is defined
+
+bool called_top_layer_solid = false;
+Color top_layer_color;
+int top_layer_delay;
+bool called_third_layer_solid = false;
+Color third_layer_color;
+int third_layer_delay;
+bool called_second_layer_solid = false;
+Color second_layer_color;
+int second_layer_delay;
+bool called_bottom_layer_solid = false;
+Color bottom_layer_color;
+int bottom_layer_delay;
+
+bool cube_turned_off = false;
+bool cube_made_white = false;
+int cube_made_white_delay;
+bool cube_pwm_sent = false;
+
+void turn_lights_off() {
+  cube_turned_off = true;
+}
+
+void top_layer_solid(Color color, int delay_time) {
+  called_top_layer_solid = true;
+  top_layer_color = color;
+  top_layer_delay = delay_time;
+}
+
+void third_layer_solid(Color color, int delay_time) {
+  called_third_layer_solid = true;
+  third_layer_color = color;
+  third_layer_delay = delay_time;
+}
+
+void second_layer_solid(Color color, int delay_time) {
+  called_second_layer_solid = true;
+  second_layer_color = color;
+  second_layer_delay = delay_time;
+}
+
+void bottom_layer_solid(Color color, int delay_time) {
+  called_bottom_layer_solid = true;
+  bottom_layer_color = color;
+  bottom_layer_delay = delay_time;
+}
+
+void make_white(int delay_time) {
+  cube_made_white = true;
+  cube_made_white_delay = delay_time;
+}
+
+void cloudy_pwm() {
+  cube_pwm_sent = true;
+}
+# endif
+
+void all_layers_solid(Color color, int delay_time) {
+  top_layer_solid(color, delay_time);
+  third_layer_solid(color, delay_time);
+  second_layer_solid(color, delay_time);
+  bottom_layer_solid(color, delay_time);
 }

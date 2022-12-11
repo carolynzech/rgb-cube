@@ -49,6 +49,8 @@ void setup() {
   while (!Serial);
   Serial.println("Initialized Serial!");
   
+  # ifndef TESTING
+
   setup_wifi();
   
   // set all 16 pins to an output  
@@ -129,6 +131,10 @@ void setup() {
   while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
   
   Serial.println("Done initializing!");
+  
+  # else // testing is defines
+  test_all_tests();
+  # endif
 }
 
 /*
@@ -198,7 +204,11 @@ void poll_data() {
     intcount = 0; // reset counter since we successfully polled
   }
 }
-# else
+
+# else // testing is defined
+bool mock_poll_success = false;
+int mock_response = -1;
+
 void poll_data() {
   // call API
   mock_poll_success = true; // api call
@@ -258,9 +268,11 @@ void light_cube(Weather weather) {
 }
 
 void loop() {
+  # ifndef TESTING
   light_cube(weather_desc);
   check_connection();
   
   // pet watchdog
   WDT->CLEAR.reg = 0xa5;
+  # endif
 }
