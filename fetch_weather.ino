@@ -105,15 +105,17 @@ void check_connection(char* get_string) {
 
 
     // Capstone functions
-
+    
 char* trim_str(char* start){
-  char *arr = (char *) malloc(7);
+  char *arr = (char *) malloc(10);
   int i = 0;
-  while (i < 6){
+  int comma = ',';
+  int bracket = '}';
+  while (i < 10 && (start[i] != comma) && (start[i] != bracket) ){
     arr[i] = *(start + i);
     i++;
   }
-  arr[6] = '\0';
+  arr[i] = '\0';
   return arr;
 }
 
