@@ -1,5 +1,3 @@
-#define TESTING
-
 #include <assert.h>
 
 void test_all_tests() {
@@ -248,20 +246,16 @@ bool test_light_cube() {
   assert(bottom_layer_delay == 200);
   // reset globals
   called_top_layer_solid = false;
-  top_layer_color = NULL;
   top_layer_delay = NULL;
   called_third_layer_solid = false;
-  third_layer_color = NULL;
   third_layer_delay = NULL;
   called_second_layer_solid = false;
-  second_layer_color = NULL;
   second_layer_delay = NULL;
   called_bottom_layer_solid = false;
-  bottom_layer_color = NULL;
   bottom_layer_delay = NULL;
 
-  // sunny case
-  light_cube(SUNNY);
+  // clear sikes case
+  light_cube(CLEAR);
   assert(called_top_layer_solid);
   assert(top_layer_color == GREEN);
   assert(top_layer_delay == 1);
@@ -276,16 +270,12 @@ bool test_light_cube() {
   assert(bottom_layer_delay == 1);
   // reset globals
   called_top_layer_solid = false;
-  top_layer_color = NULL;
   top_layer_delay = NULL;
   called_third_layer_solid = false;
-  third_layer_color = NULL;
   third_layer_delay = NULL;
   called_second_layer_solid = false;
-  second_layer_color = NULL;
   second_layer_delay = NULL;
   called_bottom_layer_solid = false;
-  bottom_layer_color = NULL;
   bottom_layer_delay = NULL;
 
   // snowy case
@@ -297,7 +287,7 @@ bool test_light_cube() {
   cube_made_white_delay = NULL;
 
   // cloudy case
-  light_cube(CLOUDY)
+  light_cube(CLOUDY);
   assert(cube_pwm_sent);
   cube_pwm_sent = false;
 
