@@ -34,7 +34,7 @@ void test_update_fsm() {
 
   weather_desc = UNSUPPORTED; 
   update_fsm(sun_list[0]);
-  assert(weather_desc == SUNNY);
+  assert(weather_desc == CLEAR);
 
   weather_desc = UNSUPPORTED; 
   update_fsm(snow_list[0]);
@@ -55,7 +55,7 @@ void test_update_fsm() {
 
   weather_desc = RAINY; 
   update_fsm(sun_list[0]);
-  assert(weather_desc == SUNNY);
+  assert(weather_desc == CLEAR);
 
   weather_desc = RAINY; 
   update_fsm(snow_list[0]);
@@ -65,24 +65,24 @@ void test_update_fsm() {
   update_fsm(cloud_list[0]);
   assert(weather_desc == CLOUDY);
   
-  // starting in sunny
-  weather_desc = SUNNY; 
+  // starting in CLEAR
+  weather_desc = CLEAR; 
   update_fsm(-2);
   assert(weather_desc == UNSUPPORTED);
 
-  weather_desc = SUNNY; 
+  weather_desc = CLEAR; 
   update_fsm(rain_list[0]);
   assert(weather_desc == RAINY);
 
-  weather_desc = SUNNY; 
+  weather_desc = CLEAR; 
   update_fsm(sun_list[0]);
-  assert(weather_desc == SUNNY);
+  assert(weather_desc == CLEAR);
 
-  weather_desc = SUNNY; 
+  weather_desc = CLEAR; 
   update_fsm(snow_list[0]);
   assert(weather_desc == SNOWY);
 
-  weather_desc = SUNNY; 
+  weather_desc = CLEAR; 
   update_fsm(cloud_list[0]);
   assert(weather_desc == CLOUDY);
 
@@ -97,7 +97,7 @@ void test_update_fsm() {
 
   weather_desc = SNOWY; 
   update_fsm(sun_list[0]);
-  assert(weather_desc == SUNNY);
+  assert(weather_desc == CLEAR);
 
   weather_desc = SNOWY; 
   update_fsm(snow_list[0]);
@@ -118,7 +118,7 @@ void test_update_fsm() {
 
   weather_desc = CLOUDY; 
   update_fsm(sun_list[0]);
-  assert(weather_desc == SUNNY);
+  assert(weather_desc == CLEAR);
 
   weather_desc = CLOUDY; 
   update_fsm(snow_list[0]);

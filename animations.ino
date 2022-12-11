@@ -1,9 +1,3 @@
-/* TODO:
-  - yellow
-  - white
-  - thunderstorm (maybe do pwm green on bottom to show why charlieplexing is important)
-*/
-
 void turn_lights_off() {
   PORT->Group[PORTA].OUTCLR.reg = (1 << PIN10); // wire 9
   PORT->Group[PORTB].OUTCLR.reg = (1 << PIN4); // wire 3
@@ -389,7 +383,7 @@ void make_yellow(int delay_time) {
   top_layer_solid(GREEN, delay_time);
 }
 
-void make_rainbow(int delay_time) {
+void make_white(int delay_time) {
   bottom_layer_solid(RED, delay_time);
   bottom_layer_solid(GREEN, delay_time);
   bottom_layer_solid(BLUE, delay_time);

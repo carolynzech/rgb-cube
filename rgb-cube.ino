@@ -21,7 +21,7 @@ int PINA2 = 3;
 enum Weather {
   UNSUPPORTED,
   RAINY,
-  SUNNY,
+  CLEAR,
   SNOWY,
   CLOUDY
 };
@@ -161,7 +161,7 @@ int is_in(int token, int list[]) {
 void update_fsm(int weather_type) {
 
   if (is_in(weather_type, sun_list)) {
-    weather_desc = SUNNY;
+    weather_desc = CLEAR;
   } else if (is_in(weather_type, cloud_list)) {
     weather_desc = CLOUDY;
   } else if (is_in(weather_type, rain_list)) {
@@ -243,11 +243,11 @@ void light_cube(Weather weather) {
     case RAINY:
       all_layers_solid(BLUE, 200);
       break;
-    case SUNNY: // clear skies
+    case CLEAR:
       all_layers_solid(GREEN, 1);
       break;
     case SNOWY:
-      make_rainbow(1);
+      make_white(1);
       break;
     case CLOUDY:
       cloudy_pwm();
