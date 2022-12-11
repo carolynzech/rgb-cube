@@ -58,7 +58,7 @@ int get_weather_from_time(char* time_ptr) {
   return weather_code;
 }
 
-// -1 error means client unavailable, -2 means just haven't read enough bytes to reach weather code yet
+// -1 error means client unavailable
 int read_webpage() {
     // Check for bytes to read
   int len = client.available();
@@ -72,9 +72,7 @@ int read_webpage() {
     buffer[index] = c;
     index++;
     char* time_ptr = strstr(buffer, "time\":");
-    if (time_ptr == NULL) {
-      return -2;
-    } else {
+    if (time_ptr != NULL) {
       return get_weather_from_time(time_ptr);
     }
   }
