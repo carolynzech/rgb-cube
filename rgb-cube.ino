@@ -44,12 +44,46 @@ int cloud_list[] = {3, 45, 48, -1};
 int rain_list[] = {51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99, -1};
 int snow_list[] = {71, 73, 75, 77, 85, 86, -1};
 
+char* get_string = "GET /v1/forecast?latitude=41.82&longitude=-71.41&current_weather=true HTTP/1.1";  // default
+
 void setup() {
   Serial.begin(9600);
   while (!Serial);
   Serial.println("Initialized Serial!");
   
   setup_wifi();
+  // changed this
+
+
+  if (connect_to_location_webpage()) { // connect to the webapp
+    Serial.println("fetched desired location webpage");
+
+    int tries = 0;
+    while (tries < 500){
+      char* location_str = read_location_webpage(); // this is where we try to actually get a response from the webapp
+      if (location_str != "unavailable") {
+        get_string = location_str;
+//        Serial.println("available");
+//        Serial.println(location_str);
+//        Serial.println("done available");
+        break;
+    }
+     // Serial.println("not available");
+      Serial.println(location_str);
+     // Serial.println("not available still");
+      tries++;
+    }
+   
+  } else {
+    Serial.println("failed to fetch desired location webpage");
+  }
+
+  
+  if (connect_to_webpage(get_string)) { // connect to the weather API
+    Serial.println("fetched webpage");
+  } else {
+    Serial.println("failed to fetch webpage");
+  }
   
   // set all 16 pins to an output  
   PORT->Group[PORTA].DIRSET.reg = (1 << PIN10);
@@ -259,7 +293,7 @@ void light_cube(Weather weather) {
 
 void loop() {
   light_cube(weather_desc);
-  check_connection();
+  check_connection(get_string);
   
   // pet watchdog
   WDT->CLEAR.reg = 0xa5;

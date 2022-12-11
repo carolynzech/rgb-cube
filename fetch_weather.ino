@@ -8,6 +8,7 @@ int status = WL_IDLE_STATUS;  // the WiFi radio's status
 WiFiClient client;
 char buffer[2000];
 const int buf_size = 2000;
+char* lat_long_response;
 
 void setup_wifi() {
   // attempt to connect to WiFi network:
@@ -19,20 +20,18 @@ void setup_wifi() {
     delay(10000);
   }
   Serial.println("Connected!");
-  if (connect_to_webpage()) {
-    Serial.println("fetched webpage");
-  } else {
-    Serial.println("failed to fetch webpage");
-  }
 }
 
 /* 
  * Attempts to connect to the weather API and get the weather for specified location
  * Returns boolean: true for successful connection, false otherwise
  */
-bool connect_to_webpage() {
+bool connect_to_webpage(char* get_string) {
+  Serial.println("Currently polling...");
+  Serial.println(get_string);
   if (client.connect("api.open-meteo.com", 80)) {
-    client.println("GET /v1/forecast?latitude=41.82&longitude=-71.41&current_weather=true HTTP/1.1"); // providence
+    client.println(get_string); // providence
+    // "GET /v1/forecast?latitude=41.82&longitude=-71.41&current_weather=true HTTP/1.1" providence
     // client.println("GET /v1/forecast?latitude=48.13&longitude=11.58&current_weather=true HTTP/1.1"); // munich
     client.println("Host: api.open-meteo.com");
     client.println("Connection: close");
@@ -95,11 +94,81 @@ int read_webpage() {
   return -1;
 }
    
-void check_connection() {
+void check_connection(char* get_string) {
     // Connection ended / no more bytes to read
     if (!client.connected()) {
       delay(500);
       // Try to reconnect
-      connect_to_webpage();
+      connect_to_webpage(get_string);
     }
+}
+
+
+    // Capstone functions
+
+char* trim_str(char* start){
+  char *arr = (char *) malloc(7);
+  int i = 0;
+  while (i < 6){
+    arr[i] = *(start + i);
+    i++;
+  }
+  arr[6] = '\0';
+  return arr;
+}
+
+
+char* read_location_webpage() {
+  char* default_location =  "unavailable";
+    // Check for bytes to read
+  int len = client.available();
+  if (len == 0){
+    // Serial.println("returning");
+    return default_location; 
+  }
+  memset(buffer, 0x0, sizeof(buffer));
+  int index = 0;
+  bool found_lat = false;
+  while (client.available()) {
+    int r = client.read();
+    char c = (char) r;
+    buffer[index] = c;
+    index++;
+    
+    char* start_lat = strstr(buffer, "\"latitude\":");
+    char* start_long = strstr(buffer, ",\"longitude");
+    char* test_lat;
+    if (start_long != NULL && !found_lat){
+      found_lat = true;
+      char* lat_num = (start_lat + 11);
+      test_lat = trim_str(lat_num); 
+    }
+    char* end_long = strstr(buffer, "}");
+    if (start_long != NULL && end_long != NULL){
+      char* long_num = (start_long + 13);
+      char* test_long = trim_str(long_num);
+      char *result = (char *) malloc(100);  // array to hold the result.
+      strcpy(result,"GET /v1/forecast?latitude="); // copy string one into the result.
+      strcat(result,test_lat);
+      strcat(result,"&longitude=");
+      strcat(result,test_long);
+      strcat(result, "&current_weather=true HTTP/1.1");
+      lat_long_response = result;
+      return lat_long_response;
+    }
+  }
+  return default_location;
+}
+
+bool connect_to_location_webpage() {
+  if (client.connect("rgb-led-app.herokuapp.com", 80)) { // (client.connect(api.weather.gov, 80))
+    client.println("GET /api/test_string HTTP/1.1"); // gridpoints/BOX/64,64/forecast?units=us
+    client.println("Host: rgb-led-app.herokuapp.com");
+    client.println("Connection: close");
+    client.println();
+    return true;
+  } else {
+    Serial.println("Failed to fetch webpage");
+    return false;
+  }
 }
