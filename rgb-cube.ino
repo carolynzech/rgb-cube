@@ -1,3 +1,5 @@
+#define TESTING
+
 // PORT A Group
 int PIN2 = 10;
 int PIN3 = 11;
@@ -21,7 +23,7 @@ int PINA2 = 3;
 enum Weather {
   UNSUPPORTED,
   RAINY,
-  SUNNY,
+  CLEAR,
   SNOWY,
   CLOUDY
 };
@@ -51,6 +53,8 @@ void setup() {
   while (!Serial);
   Serial.println("Initialized Serial!");
   
+  # ifndef TESTING
+
   setup_wifi();
   // changed this
 
@@ -163,6 +167,10 @@ void setup() {
   while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
   
   Serial.println("Done initializing!");
+  
+  # else // testing is defines
+  test_all_tests();
+  # endif
 }
 
 /*
@@ -195,7 +203,7 @@ int is_in(int token, int list[]) {
 void update_fsm(int weather_type) {
 
   if (is_in(weather_type, sun_list)) {
-    weather_desc = SUNNY;
+    weather_desc = CLEAR;
   } else if (is_in(weather_type, cloud_list)) {
     weather_desc = CLOUDY;
   } else if (is_in(weather_type, rain_list)) {
@@ -232,7 +240,11 @@ void poll_data() {
     intcount = 0; // reset counter since we successfully polled
   }
 }
-# else
+
+# else // testing is defined
+bool mock_poll_success = false;
+int mock_response = -1;
+
 void poll_data() {
   // call API
   mock_poll_success = true; // api call
@@ -277,11 +289,11 @@ void light_cube(Weather weather) {
     case RAINY:
       all_layers_solid(BLUE, 200);
       break;
-    case SUNNY: // clear skies
+    case CLEAR:
       all_layers_solid(GREEN, 1);
       break;
     case SNOWY:
-      make_rainbow(1);
+      make_white(1);
       break;
     case CLOUDY:
       cloudy_pwm();
@@ -292,9 +304,11 @@ void light_cube(Weather weather) {
 }
 
 void loop() {
+  # ifndef TESTING
   light_cube(weather_desc);
   check_connection(get_string);
   
   // pet watchdog
   WDT->CLEAR.reg = 0xa5;
+  # endif
 }

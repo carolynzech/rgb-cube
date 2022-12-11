@@ -1,10 +1,16 @@
-#define TESTING
-bool mock_poll_success = false;
-int mock_response = -1;
-
 #include <assert.h>
 
-void test_is_in() {
+void test_all_tests() {
+  assert(test_is_in());
+  assert(test_update_fsm());
+  assert(test_TC3_Handler());
+  assert(test_get_weather_from_time());
+  assert(test_light_cube());
+
+  Serial.println("All tests passed!");
+}
+
+bool test_is_in() {
   int full_list[] = {1, 2, 3, -1};
   int empty_list[] = {-1};
   int single_list[] = {10, -1};
@@ -19,10 +25,12 @@ void test_is_in() {
   assert(!is_in(4, repeat_list));
   assert(is_in(10, single_list));
   assert(!is_in(-10, single_list));
+
   Serial.println("Passed test_is_in!");
+  return true;
 }
 
-void test_update_fsm() {
+bool test_update_fsm() {
   // starting in unsupported
   weather_desc = UNSUPPORTED; 
   update_fsm(-2);
@@ -34,7 +42,7 @@ void test_update_fsm() {
 
   weather_desc = UNSUPPORTED; 
   update_fsm(sun_list[0]);
-  assert(weather_desc == SUNNY);
+  assert(weather_desc == CLEAR);
 
   weather_desc = UNSUPPORTED; 
   update_fsm(snow_list[0]);
@@ -55,7 +63,7 @@ void test_update_fsm() {
 
   weather_desc = RAINY; 
   update_fsm(sun_list[0]);
-  assert(weather_desc == SUNNY);
+  assert(weather_desc == CLEAR);
 
   weather_desc = RAINY; 
   update_fsm(snow_list[0]);
@@ -65,24 +73,24 @@ void test_update_fsm() {
   update_fsm(cloud_list[0]);
   assert(weather_desc == CLOUDY);
   
-  // starting in sunny
-  weather_desc = SUNNY; 
+  // starting in CLEAR
+  weather_desc = CLEAR; 
   update_fsm(-2);
   assert(weather_desc == UNSUPPORTED);
 
-  weather_desc = SUNNY; 
+  weather_desc = CLEAR; 
   update_fsm(rain_list[0]);
   assert(weather_desc == RAINY);
 
-  weather_desc = SUNNY; 
+  weather_desc = CLEAR; 
   update_fsm(sun_list[0]);
-  assert(weather_desc == SUNNY);
+  assert(weather_desc == CLEAR);
 
-  weather_desc = SUNNY; 
+  weather_desc = CLEAR; 
   update_fsm(snow_list[0]);
   assert(weather_desc == SNOWY);
 
-  weather_desc = SUNNY; 
+  weather_desc = CLEAR; 
   update_fsm(cloud_list[0]);
   assert(weather_desc == CLOUDY);
 
@@ -97,7 +105,7 @@ void test_update_fsm() {
 
   weather_desc = SNOWY; 
   update_fsm(sun_list[0]);
-  assert(weather_desc == SUNNY);
+  assert(weather_desc == CLEAR);
 
   weather_desc = SNOWY; 
   update_fsm(snow_list[0]);
@@ -118,7 +126,7 @@ void test_update_fsm() {
 
   weather_desc = CLOUDY; 
   update_fsm(sun_list[0]);
-  assert(weather_desc == SUNNY);
+  assert(weather_desc == CLEAR);
 
   weather_desc = CLOUDY; 
   update_fsm(snow_list[0]);
@@ -129,9 +137,10 @@ void test_update_fsm() {
   assert(weather_desc == UNSUPPORTED);
   
   Serial.println("Passed test_update_fsm!");
+  return true;
 }
 
-void test_TC3_Handler() {
+bool test_TC3_Handler() {
   // Initialize and start timer
   GCLK->GENDIV.reg = GCLK_GENDIV_DIV(0) | GCLK_GENDIV_ID(4); // do not divide gclk 4
   while(GCLK->STATUS.bit.SYNCBUSY);
@@ -170,9 +179,12 @@ void test_TC3_Handler() {
   
   // check that global has been set by poll_data mock
   assert(mock_poll_success);
+
+  Serial.println("Passed test_TC3_Handler!");
+  return true;
 }
 
-void test_get_weather_from_time() {
+bool test_get_weather_from_time() {
   // single digit code
   char *overcast = ".0,\"weathercode\":3,\"time\":";
   char *time_ptr = strstr(overcast, "time\":");
@@ -208,4 +220,82 @@ void test_get_weather_from_time() {
 
   // time was not found in response
   assert(get_weather_from_time(NULL) == -1);
+
+  Serial.println("Passed test_get_weather_from_time!");
+  return true;
+}
+
+
+bool test_light_cube() {
+  // Since we cannot do automating testing GPIO output, we are instead
+  // testing that the correct helper fucnctions are called with the correct inputs
+
+  // rainy case
+  light_cube(RAINY);
+  assert(called_top_layer_solid);
+  assert(top_layer_color == BLUE);
+  assert(top_layer_delay == 200);
+  assert(called_third_layer_solid);
+  assert(third_layer_color == BLUE);
+  assert(third_layer_delay == 200);
+  assert(called_second_layer_solid);
+  assert(second_layer_color == BLUE);
+  assert(second_layer_delay == 200);
+  assert(called_bottom_layer_solid);
+  assert(bottom_layer_color == BLUE);
+  assert(bottom_layer_delay == 200);
+  // reset globals
+  called_top_layer_solid = false;
+  top_layer_delay = NULL;
+  called_third_layer_solid = false;
+  third_layer_delay = NULL;
+  called_second_layer_solid = false;
+  second_layer_delay = NULL;
+  called_bottom_layer_solid = false;
+  bottom_layer_delay = NULL;
+
+  // clear sikes case
+  light_cube(CLEAR);
+  assert(called_top_layer_solid);
+  assert(top_layer_color == GREEN);
+  assert(top_layer_delay == 1);
+  assert(called_third_layer_solid);
+  assert(third_layer_color == GREEN);
+  assert(third_layer_delay == 1);
+  assert(called_second_layer_solid);
+  assert(second_layer_color == GREEN);
+  assert(second_layer_delay == 1);
+  assert(called_bottom_layer_solid);
+  assert(bottom_layer_color == GREEN);
+  assert(bottom_layer_delay == 1);
+  // reset globals
+  called_top_layer_solid = false;
+  top_layer_delay = NULL;
+  called_third_layer_solid = false;
+  third_layer_delay = NULL;
+  called_second_layer_solid = false;
+  second_layer_delay = NULL;
+  called_bottom_layer_solid = false;
+  bottom_layer_delay = NULL;
+
+  // snowy case
+  light_cube(SNOWY);
+  assert(cube_made_white);
+  assert(cube_made_white_delay == 1);
+  //r reset globals
+  cube_made_white = false;
+  cube_made_white_delay = NULL;
+
+  // cloudy case
+  light_cube(CLOUDY);
+  assert(cube_pwm_sent);
+  cube_pwm_sent = false;
+
+  // other cases (unsupported)
+  light_cube(UNSUPPORTED);
+  assert(cube_turned_off);
+  cube_turned_off = false;
+
+  Serial.println("Passed test_light_cube!");
+  return true;
 }
