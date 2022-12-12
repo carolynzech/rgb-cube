@@ -1,4 +1,3 @@
-
 # ifndef TESTING
 void turn_lights_off() {
   PORT->Group[PORTA].OUTCLR.reg = (1 << PIN10); // wire 9

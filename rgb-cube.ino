@@ -210,7 +210,7 @@ void update_fsm(int weather_type) {
  *
  * no inputs, returns nothing. updates the weather_desc global.
  */
-# ifndef TESTING
+
 void poll_data() {
   // call API
   int response = read_webpage();
@@ -227,15 +227,7 @@ void poll_data() {
     intcount = 0; // reset counter since we successfully polled
   }
 }
-# else
-void poll_data() {
-  // call API
-  mock_poll_success = true; // api call
-  poll_time = millis();
-  update_fsm(mock_response);
-  prev_poll_time = poll_time;
-}
-# endif
+
 
 void TC3_Handler() {
   // Clear interrupt register flag
