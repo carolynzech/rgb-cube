@@ -105,7 +105,10 @@ void check_connection(char* get_string) {
 
 
     // Capstone functions
-    
+/* 
+ * Parses a portion of the response string from the locations api to find the latitude or longitude within it
+ * input: char* start: the starting location from which to look for a decimal number representing either latitude or longitude
+ */    
 char* trim_str(char* start){
   char *arr = (char *) malloc(10);
   int i = 0;
@@ -119,7 +122,11 @@ char* trim_str(char* start){
   return arr;
 }
 
-
+/* 
+ * Attempts to connect to the location API and get the latitude, longitude for a specified user
+ * Returns char* : "unavailable" if the client is not available or returns an error or the string that the 
+ * connect_to_webpage function should use to make a GET request to the weather API
+ */
 char* read_location_webpage() {
   char* default_location =  "unavailable";
     // Check for bytes to read

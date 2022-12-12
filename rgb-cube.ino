@@ -50,33 +50,26 @@ void setup() {
   Serial.begin(9600);
   while (!Serial);
   Serial.println("Initialized Serial!");
+  //test_all_capstone_tests();
   
+  // Setting up connections to both APIs
   setup_wifi();
-  // changed this
   if (connect_to_location_webpage()) { // connect to the webapp
     Serial.println("fetched desired location webpage");
-
     int tries = 0;
-    while (tries < 500){
+    while (tries < 500){ // limit number of tries to avoid costing $$$ on heroku. usually takes fewer than this to connect.
       char* location_str = read_location_webpage(); // this is where we try to actually get a response from the webapp
       if (location_str != "unavailable") {
-        get_string = location_str;
-//        Serial.println("available");
-//        Serial.println(location_str);
-//        Serial.println("done available");
+        get_string = location_str; // Set the get_string to be the returned string b/c we got a true response from the location webapp
         break;
     }
-     // Serial.println("not available");
       Serial.println(location_str);
-     // Serial.println("not available still");
       tries++;
     }
-   
   } else {
-    Serial.println("failed to fetch desired location webpage");
+    Serial.println("failed to fetch desired location webpage. defaulting to Providence, RI.");
   }
 
-  
   if (connect_to_webpage(get_string)) { // connect to the weather API
     Serial.println("fetched webpage");
   } else {
@@ -246,12 +239,12 @@ void TC3_Handler() {
   TC3->COUNT16.INTFLAG.bit.MC0 = 1;
 
   // print the current weathter status
-  Serial.print("Current weather: ");
-  Serial.println(weather_desc);
+  //Serial.print("Current weather: ");
+  //Serial.println(weather_desc);
   
   intcount++; // counter increases every approx. 4.6 seconds
   if (intcount >= 5) { // after approx 23 seconds since last successful poll
-      poll_data();
+     poll_data(); //COMMENT FOR TESTING
   }
 }
 
@@ -292,7 +285,7 @@ void light_cube(Weather weather) {
 void loop() {
   light_cube(weather_desc);
   check_connection(get_string);
-  
+//  
   // pet watchdog
   WDT->CLEAR.reg = 0xa5;
 }
