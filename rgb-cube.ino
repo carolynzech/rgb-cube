@@ -50,7 +50,7 @@ void setup() {
   Serial.begin(9600);
   while (!Serial);
   Serial.println("Initialized Serial!");
-//  test_all_capstone_tests();
+  test_all_capstone_tests();
   
   // Setting up connections to both APIs
   setup_wifi();

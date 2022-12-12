@@ -107,7 +107,7 @@ void check_connection(char* get_string) {
 }
 
 
-    // Capstone functions
+// -------------------- Capstone functions --------------------
 /* 
  * Parses a portion of the response string from the locations api to find the latitude or longitude within it
  * input: char* start: the starting location from which to look for a decimal number representing either latitude or longitude
@@ -153,12 +153,12 @@ char* read_location_webpage() {
     char* test_lat;
     if (start_long != NULL && !found_lat){
       found_lat = true;
-      char* lat_num = (start_lat + 11);
+      char* lat_num = (start_lat + 11); // length of latitude and extra chars at start
       test_lat = trim_str(lat_num); 
     }
     char* end_long = strstr(buffer, "}");
     if (start_long != NULL && end_long != NULL){
-      char* long_num = (start_long + 13);
+      char* long_num = (start_long + 13); // length of longitude and extra chars at start
       char* test_long = trim_str(long_num);
       char *result = (char *) malloc(100);  // array to hold the result to make sure it persists after we return
       strcpy(result,"GET /v1/forecast?latitude=");
@@ -179,7 +179,7 @@ char* read_location_webpage() {
  */
 bool connect_to_location_webpage() {
   if (client.connect("rgb-led-app.herokuapp.com", 80)) { 
-    client.println("GET /api/myFavArduino HTTP/1.1");  // test_string is the name associated with this Arduino
+    client.println("GET /api/myFavArduino HTTP/1.1");  // myFavArduino is the name associated with this Arduino
     client.println("Host: rgb-led-app.herokuapp.com");
     client.println("Connection: close");
     client.println();

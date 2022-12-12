@@ -1,36 +1,57 @@
-int num_webapp_tests = 1;
 char* mock_response; // so we don't have the memory issue of returning value garbage from a function
 
+/*
+ * Compares to char* character by character. A helper function for testing.
+ * input: char* a is the first char* to compare
+ * input char* b is the first char* to compare
+ * output: if a and b are character-by-character equal
+ */
 bool cmp_char_star(char* a, char* b) {
   int i = 0;
   while ((a[i]) != '\0' && b[i] != '\0'){
-    if ((a[i]) != ( b[i])){
+    if ((a[i]) != ( b[i])){ // found something that does not match
       return false;
     } else {
     }
     i++;
   }
-  if (a[i] == '\0' && b[i] == '\0'){
+  if (a[i] == '\0' && b[i] == '\0'){ // were same length
     return true;
-  } else {
+  } else { // were not same length
     return false;
   }
 }
 
-// the offset argument is used because latitude and longitude have different lengths, 
-// so this depends on which we are testing. this is integration tested in mock_read_location_webpage.
+/*
+ * Tests the trim_str function
+ * input: char* buff the buffer to trim
+ * input: char* expected result the expected result of calling trim_str on the buffer 
+ * input: offset used because latitude and longitude have different lengths, 
+ * so this depends on which we are testing. this integration tested in mock_read_location_webpage.
+ * output: if expected_res equals trim_str of the inputed buffer
+ */
 bool test_trim(char* buff, char* expected_res, int offset){ 
   char* start = (buff + offset);
   char* res = trim_str(start);
   return cmp_char_star(expected_res, res);
 }
 
+/*
+ * Tests the mock_read_location function by taking in a mock_buffer and the expected result.
+ * input: char* mock_buffer is the input passed to mock_read_location to represent a buffer read in the from the rgb website API
+ * input: char* expected_res the expected result
+ * output: returns if expected_res matches result of calling mock_read_location on mock_buff
+ */
 bool test_read_location(char *mock_buff, char* expected_res){
   char* res = mock_read_location_webpage(mock_buff);
   return cmp_char_star(expected_res, res);
 }
 
-
+/* 
+ * Version of read location that does not actually read in from a buffer, but instead takes in a buffer to test the string parsing functionality
+ * input: char* mock_buffer represents the response that the real function reads in from the API
+ * output: returns the API request string created from the latitude and longitude received in the buffer
+ */
 char* mock_read_location_webpage(char* mock_buffer) {
   char* default_location =  "unavailable";
    bool found_lat = false;
@@ -119,6 +140,4 @@ bool test_all_capstone_tests() {
     return false;
    }
    Serial.println("All capstone tests pass!");
-   
-  
 }
