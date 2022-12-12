@@ -173,12 +173,17 @@ bool test_TC3_Handler() {
   // wait until intcount == 5
   while (intcount < 5);
 
-  // check that millis is > 30 seconds
+  // check that millis is > 20 seconds
   int curr_mils = millis();
-  assert(curr_mils - start_mils > 30000);
+  assert(curr_mils - start_mils > 20000);
   
   // check that global has been set by poll_data mock
   assert(mock_poll_success);
+ 
+  // Disable TC
+  TC3->COUNT16.INTENCLR.bit.MC0 = 1;
+  TC3->COUNT16.CTRLA.bit.ENABLE = 0;
+  while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
 
   Serial.println("Passed test_TC3_Handler!");
   return true;
@@ -190,7 +195,7 @@ bool test_get_weather_from_time() {
   char *time_ptr = strstr(overcast, "time\":");
   assert(get_weather_from_time(time_ptr) == 3);
 
-  char *mainly_clear = "1,\"time\":";
+  char *mainly_clear = ":1,\"time\":";
   time_ptr = strstr(mainly_clear, "time\":");
   assert(get_weather_from_time(time_ptr) == 1);
 
