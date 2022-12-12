@@ -127,8 +127,8 @@ char* trim_str(char* start){
 
 /* 
  * Attempts to connect to the location API and get the latitude, longitude for a specified user
- * Returns char* : "unavailable" if the client is not available or returns an error or the string that the 
- * connect_to_webpage function should use to make a GET request to the weather API
+ * Returns char* : "unavailable" if the client is not available/returns an error or the string that the 
+ * connect_to_webpage function should use to make a GET request to the weather API if reading was successful
  */
 char* read_location_webpage() {
   char* default_location =  "unavailable";
@@ -160,8 +160,8 @@ char* read_location_webpage() {
     if (start_long != NULL && end_long != NULL){
       char* long_num = (start_long + 13);
       char* test_long = trim_str(long_num);
-      char *result = (char *) malloc(100);  // array to hold the result.
-      strcpy(result,"GET /v1/forecast?latitude="); // copy string one into the result.
+      char *result = (char *) malloc(100);  // array to hold the result to make sure it persists after we return
+      strcpy(result,"GET /v1/forecast?latitude=");
       strcat(result,test_lat);
       strcat(result,"&longitude=");
       strcat(result,test_long);
@@ -173,9 +173,13 @@ char* read_location_webpage() {
   return default_location;
 }
 
+/* 
+ * Attempts to connect to the location API and get the weather for specified location
+ * Returns boolean: true for successful connection, false otherwise
+ */
 bool connect_to_location_webpage() {
-  if (client.connect("rgb-led-app.herokuapp.com", 80)) { // (client.connect(api.weather.gov, 80))
-    client.println("GET /api/test_string HTTP/1.1"); // gridpoints/BOX/64,64/forecast?units=us
+  if (client.connect("rgb-led-app.herokuapp.com", 80)) { 
+    client.println("GET /api/myFavArduino HTTP/1.1");  // test_string is the name associated with this Arduino
     client.println("Host: rgb-led-app.herokuapp.com");
     client.println("Connection: close");
     client.println();

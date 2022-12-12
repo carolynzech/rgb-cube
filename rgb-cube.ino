@@ -50,7 +50,7 @@ void setup() {
   Serial.begin(9600);
   while (!Serial);
   Serial.println("Initialized Serial!");
-  //test_all_capstone_tests();
+//  test_all_capstone_tests();
   
   // Setting up connections to both APIs
   setup_wifi();
@@ -59,7 +59,7 @@ void setup() {
     Serial.println("fetched desired location webpage");
     int tries = 0;
     char* location_str;
-    while (tries < 500){ // limit number of tries to avoid costing $$$ on heroku. usually takes fewer than this to connect.
+    while (tries < 1000){ // limit number of tries to avoid costing $$$ on heroku and limit latency. usually takes fewer than this to connect.
       location_str = read_location_webpage(); // this is where we try to actually get a response from the webapp
       if (location_str != "unavailable") {
         get_string = location_str; // Set the get_string to be the returned string b/c we got a true response from the location webapp
@@ -218,10 +218,8 @@ void poll_data() {
   if (response == -1) {
     Serial.println("Failed to read weather... trying again.");
   } else {
+    Serial.println("Polled successfully!");
     poll_time = millis();
-    Serial.print("Data polled! Last poll was ");
-    Serial.print((poll_time - prev_poll_time) / 100);
-    Serial.println(" seconds ago.");
     update_fsm(response);
     prev_poll_time = poll_time;
     intcount = 0; // reset counter since we successfully polled
@@ -234,13 +232,9 @@ void TC3_Handler() {
   // (use register TC3->COUNT16.register_name.reg)
   TC3->COUNT16.INTFLAG.bit.MC0 = 1;
 
-  // print the current weathter status
-  //Serial.print("Current weather: ");
-  //Serial.println(weather_desc);
-  
   intcount++; // counter increases every approx. 4.6 seconds
   if (intcount >= 5) { // after approx 23 seconds since last successful poll
-     poll_data(); //COMMENT FOR TESTING
+     poll_data(); 
   }
 }
 
@@ -268,7 +262,7 @@ void light_cube(Weather weather) {
       all_layers_solid(GREEN, 1);
       break;
     case SNOWY:
-      //make_rainbow(1);
+      make_white(1);
       break;
     case CLOUDY:
       cloudy_pwm();

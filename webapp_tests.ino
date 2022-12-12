@@ -118,6 +118,7 @@ bool test_all_capstone_tests() {
    if(!test_read_location(mock_buffer, expected_res)){
     return false;
    }
+   Serial.println("All capstone tests pass!");
    
   
 }
