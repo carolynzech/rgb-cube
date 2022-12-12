@@ -139,6 +139,7 @@ char* read_location_webpage() {
   int index = 0;
   bool found_lat = false;
   while (client.available()) {
+    Serial.println("available");
     int r = client.read();
     char c = (char) r;
     buffer[index] = c;

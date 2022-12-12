@@ -54,13 +54,16 @@ void setup() {
   
   // Setting up connections to both APIs
   setup_wifi();
+  // Connecting to the location webpage (https://rgb-led-app.herokuapp.com/) API to find the desired location for the user
   if (connect_to_location_webpage()) { // connect to the webapp
     Serial.println("fetched desired location webpage");
     int tries = 0;
+    char* location_str;
     while (tries < 500){ // limit number of tries to avoid costing $$$ on heroku. usually takes fewer than this to connect.
-      char* location_str = read_location_webpage(); // this is where we try to actually get a response from the webapp
+      location_str = read_location_webpage(); // this is where we try to actually get a response from the webapp
       if (location_str != "unavailable") {
         get_string = location_str; // Set the get_string to be the returned string b/c we got a true response from the location webapp
+        Serial.println(location_str);
         break;
     }
       Serial.println(location_str);
@@ -69,8 +72,9 @@ void setup() {
   } else {
     Serial.println("failed to fetch desired location webpage. defaulting to Providence, RI.");
   }
-
-  if (connect_to_webpage(get_string)) { // connect to the weather API
+  
+  // Connect to the weather API
+  if (connect_to_webpage(get_string)) {
     Serial.println("fetched webpage");
   } else {
     Serial.println("failed to fetch webpage");
