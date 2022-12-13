@@ -52,7 +52,6 @@ bool connect_to_webpage() {
  * Returns int: weather code returned from API.
 */
 int get_weather_from_time(char* time_ptr) {
-  if (time_ptr == NULL) return -1;
   int weather_code;
   // weather code is 3/4 digits back from "time", depending on # of digits
   const char* weather_code_digit_one = time_ptr - 4;
@@ -68,8 +67,6 @@ int get_weather_from_time(char* time_ptr) {
     const char* const_arr = arr;
     weather_code = std::atoi(const_arr);
   }
-  
-  if ((weather_code == 0) && (weather_code_digit_two[0] != '0')) return -1;
   return weather_code;
 }
 

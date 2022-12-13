@@ -1,4 +1,4 @@
-// # define TESTING
+#define TESTING
 
 // PORT A Group
 int PIN2 = 10;
