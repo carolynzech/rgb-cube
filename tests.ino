@@ -208,10 +208,16 @@ bool test_get_weather_from_time() {
   time_ptr = strstr(snow_grains, "time\":");
   assert(get_weather_from_time(time_ptr) == 77);
 
-  // unsupported weathe found
+  // unsupported weather found
   char *unsupported = "\"weathercode\":58,\"time\":";
   time_ptr = strstr(unsupported, "time\":");
   assert(get_weather_from_time(time_ptr) == 58);
+
+   // unsupported weather found, double digit code that ends in 0
+  char *unsupported = "\"weathercode\":30,\"time\":";
+  time_ptr = strstr(unsupported, "time\":");
+  assert(get_weather_from_time(time_ptr) == 30);
+
 
   // not a number
   char *nan = "\"weathercode\":,\"time\":";
