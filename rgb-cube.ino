@@ -34,14 +34,14 @@ enum Color {
   BLUE
 };
 
-volatile int poll_time;
-volatile int prev_poll_time;
-volatile int intcount = 6;
+volatile int poll_time; // time API is last successfully polled, in milliseconds
+volatile int prev_poll_time; // second to last time API is successfully polled, in milliseconds
+volatile int intcount = 6; // number of interrupts; used to space out API reads
 
 Weather weather_desc = UNSUPPORTED;
 
 // translate weather codes provided by the API to the supported weather patterns. terminate with -1
-int sun_list[] = {0, 1, 2, -1};
+int clear_list[] = {0, 1, 2, -1};
 int cloud_list[] = {3, 45, 48, -1};
 int rain_list[] = {51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99, -1};
 int snow_list[] = {71, 73, 75, 77, 85, 86, -1};
@@ -168,7 +168,7 @@ int is_in(int token, int list[]) {
  */
 void update_fsm(int weather_type) {
 
-  if (is_in(weather_type, sun_list)) {
+  if (is_in(weather_type, clear_list)) {
     weather_desc = CLEAR;
   } else if (is_in(weather_type, cloud_list)) {
     weather_desc = CLOUDY;

@@ -33,7 +33,6 @@ void setup_wifi() {
 bool connect_to_webpage() {
   if (client.connect("api.open-meteo.com", 80)) {
     client.println("GET /v1/forecast?latitude=41.82&longitude=-71.41&current_weather=true HTTP/1.1"); // providence
-    // client.println("GET /v1/forecast?latitude=48.13&longitude=11.58&current_weather=true HTTP/1.1"); // munich
     client.println("Host: api.open-meteo.com");
     client.println("Connection: close");
     client.println();

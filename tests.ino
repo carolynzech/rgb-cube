@@ -1,5 +1,6 @@
 #include <assert.h>
 
+// run all the tests
 void test_all_tests() {
   assert(test_is_in());
   assert(test_update_fsm());
@@ -10,6 +11,7 @@ void test_all_tests() {
   Serial.println("All tests passed!");
 }
 
+// test is_in function
 bool test_is_in() {
   int full_list[] = {1, 2, 3, -1};
   int empty_list[] = {-1};
