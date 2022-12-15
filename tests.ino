@@ -43,7 +43,7 @@ bool test_update_fsm() {
   assert(weather_desc == RAINY);
 
   weather_desc = UNSUPPORTED; 
-  update_fsm(sun_list[0]);
+  update_fsm(clear_list[0]);
   assert(weather_desc == CLEAR);
 
   weather_desc = UNSUPPORTED; 
@@ -64,7 +64,7 @@ bool test_update_fsm() {
   assert(weather_desc == RAINY);
 
   weather_desc = RAINY; 
-  update_fsm(sun_list[0]);
+  update_fsm(clear_list[0]);
   assert(weather_desc == CLEAR);
 
   weather_desc = RAINY; 
@@ -85,7 +85,7 @@ bool test_update_fsm() {
   assert(weather_desc == RAINY);
 
   weather_desc = CLEAR; 
-  update_fsm(sun_list[0]);
+  update_fsm(clear_list[0]);
   assert(weather_desc == CLEAR);
 
   weather_desc = CLEAR; 
@@ -106,7 +106,7 @@ bool test_update_fsm() {
   assert(weather_desc == RAINY);
 
   weather_desc = SNOWY; 
-  update_fsm(sun_list[0]);
+  update_fsm(clear_list[0]);
   assert(weather_desc == CLEAR);
 
   weather_desc = SNOWY; 
@@ -127,7 +127,7 @@ bool test_update_fsm() {
   assert(weather_desc == RAINY);
 
   weather_desc = CLOUDY; 
-  update_fsm(sun_list[0]);
+  update_fsm(clear_list[0]);
   assert(weather_desc == CLEAR);
 
   weather_desc = CLOUDY; 
@@ -220,7 +220,6 @@ bool test_get_weather_from_time() {
   time_ptr = strstr(unsupported, "time\":");
   assert(get_weather_from_time(time_ptr) == 30);
 
-
   // not a number
   char *nan = "\"weathercode\":,\"time\":";
   time_ptr = strstr(nan, "time\":");
@@ -262,7 +261,7 @@ bool test_light_cube() {
   called_bottom_layer_solid = false;
   bottom_layer_delay = NULL;
 
-  // clear sikes case
+  // clear skies case
   light_cube(CLEAR);
   assert(called_top_layer_solid);
   assert(top_layer_color == GREEN);
@@ -290,7 +289,7 @@ bool test_light_cube() {
   light_cube(SNOWY);
   assert(cube_made_white);
   assert(cube_made_white_delay == 1);
-  //r reset globals
+  // reset globals
   cube_made_white = false;
   cube_made_white_delay = NULL;
 
